@@ -5,8 +5,8 @@ import os, pdb, yaml
 import subprocess
 import numpy as np
 from shutil import copytree, ignore_patterns, rmtree
-from sklearn.grid_search import ParameterGrid
-# from sklearn.model_selection import ParameterGrid
+# from sklearn.grid_search import ParameterGrid
+from sklearn.model_selection import ParameterGrid
 
 def Initialize():
     
@@ -195,13 +195,14 @@ def WriteJobsFile():
 if __name__ == "__main__":
 
     # Initialize the runs
-    Initialize.main() 
+    Initialize() 
 
     # Launch individually
     os.chdir( 'runs')
+    cwd = os.getcwd()
     files = os.listdir( os.getcwd())
     for fil in files:
-        os.chdir( os.path.join( os.getcwd(),fil))
+        os.chdir( os.path.join( cwd,fil))
         subprocess.call(["sbatch", "amsos.jobscript"])
 
     # Write launch script
