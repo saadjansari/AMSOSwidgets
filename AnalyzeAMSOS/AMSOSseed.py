@@ -58,7 +58,7 @@ class Seed(object):
         with open(self.cwd+'/ProteinConfig.yaml') as f:
             self.config['ProteinConfig'] = yaml.load( f)
 
-    def GraphQuantity(self, quantity, ax=None, color='m', label=None):
+    def GraphProperty(self, quantity, ax=None, color='m', label=None):
 
         # Create figure, ax if not provided
         if not ax:
@@ -68,39 +68,27 @@ class Seed(object):
         timestep = self.config['RunConfig']['timeSnap']
         Plots.graphSylinderMeanPropertyNorm( self.frames, quantity, ax, color=color, timestep=timestep)
 
-    def Graph(self, quantities=None):
+    def Graph(self, quantities=['polarOrder, nematicOrder']):
 
         # Initialize graphing data directory
         gdir = os.path.join( self.cwd, 'data')
         if os.path.exists( gdir):
             shutil.rmtree( gdir, ignore_errors=True)
-
-        # Specify quantities to graph
-        if not quantities:
-            quantities = ['polarOrder, nematicOrder']
-
         os.chdir( gdir)
+
         for quant in quantities:
+
             # Create figure 
             fig, ax = plt.subplots( 1,1, figsize=(6,6) )
-            self.GraphQuantity( quant, ax)
-            fig.suptitle( quant)
+            self.GraphProperty( quant, ax)
+            fig.suptitle( '{0}__{1}'.format(seed.label,quant))
             fig.savefig( quant+'.pdf')
             plt.close()
+
         os.chdir( self.cwd)
 
 def getFrameNumber_lambda(filename): return int(
     re.search('_([^_.]+)(?:\.[^_]*)?$', filename).group(1))
-
-
-
-
-
-
-
-
-
-
 
 if __name__ == '__main__':
     print('not implemented yet')    

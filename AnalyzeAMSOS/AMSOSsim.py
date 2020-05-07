@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from unit_dict import UnitDict
+from AMSOSseed import Seed 
 import Plots
 
 ud = UnitDict()
@@ -39,7 +40,7 @@ class Sim(object):
             with open( fname, 'rb') as f:
 
                 # Load it
-                self.frames, self.config = pickle.load(f)
+                self.seeds, self.config = pickle.load(f)
 
             # Update the working directory of loaded seeds 
             for seed in self.seeds:
@@ -65,58 +66,77 @@ class Sim(object):
             # Save pickle file
             print('Saving sim pickle file...')
             with open(fname, 'wb') as f:
-                pickle.dump( [self.frames, self.config], f) 
+                pickle.dump( [self.seeds, self.config], f) 
 
-
-    def GraphQuantity(self, quantity, ax=None):
-
-        # Create figure, ax if not provided
-        if not ax:
-            fig, ax = plt.subplots( 1,1, figsize=(6,6) )
-
-        # Get timestep 
-        timestep = self.config['RunConfig']['timeSnap']
-
-        # Plot for each seed
-        cols = sns.color_palette('husl', len(self.seeds))
-        for seed,c in zip(self.seeds, cols):
-            seed.GraphQuantity( quantity, ax=ax, color=c, label=seed.label):
-
-    def GraphQuantityMean(self, quantity, ax=None):
-
-        # Create figure, ax if not provided
-        if not ax:
-            fig, ax = plt.subplots( 1,1, figsize=(6,6) )
-
-        # Get timestep 
-        timestep = self.config['RunConfig']['timeSnap']
-
-        # Plot for each seed
-        cols = sns.color_palette('husl', len(self.seeds))
-        for seed,c in zip(self.seeds, cols):
-            seed.GraphQuantity( quantity, ax=ax, color=c, label=seed.label):
-
-    def Graph(self, quantities=None):
+    def Graph(self, quantities=['polarOrder, nematicOrder']):
 
         # Initialize graphing data directory
         gdir = os.path.join( self.cwd, 'data')
         if os.path.exists( gdir):
             shutil.rmtree( gdir, ignore_errors=True)
 
-        # Specify quantities to graph
-        if not quantities:
-            quantities = ['polarOrder, nematicOrder']
-
         os.chdir( gdir)
         for quant in quantities:
 
             # Create figure 
-            fig, ax = plt.subplots( 1,1, figsize=(6,6) )
-            self.GraphQuantity( quant, ax)
-            fig.suptitle( quant)
+            fig, ax = plt.subplots( 1,2, figsize=(12,6) )
+            self.GraphSeedsProperty( quant, ax[0])
+            self.GraphSeedsPropertyMean( quant, ax[1])
+
+            fig.suptitle( '{0}__{1}'.format(sim.label,quant))
             fig.savefig( quant+'.pdf')
             plt.close()
+
+        # Graph Seeds
+        for seed in self.seeds:
+            seed.Graph( quantities)
+
         os.chdir( self.cwd)
+
+
+    def GraphSeedsProperty(self, quantity, ax=None, color=None, label=None):
+
+        # Create figure, ax if not provided
+        if not ax:
+            fig, ax = plt.subplots( 1,1, figsize=(6,6) )
+        if not color:
+            color = sns.color_palette('husl', len(self.seeds))
+        if not label:
+            label = [s.label for s in self.seeds]
+
+        # Get timestep 
+        timestep = self.config['RunConfig']['timeSnap']
+
+        # Plot for each seed
+        for seed,c,lab in zip(self.seeds, color, label):
+            seed.GraphProperty( quantity, ax=ax, color=c, label=seed.label)
+        ax.legend()
+
+    def GraphSeedsPropertyMean(self, quantity, ax=None, color='m', label=None, err_alpha=0.3):
+
+        # Create figure, ax if not provided
+        if not ax:
+            fig, ax = plt.subplots( 1,1, figsize=(6,6) )
+
+        # Get timestep 
+        timestep = self.config['RunConfig']['timeSnap']
+
+        # Data for each seed
+        means = np.zeros( (len(self.seeds), len(self.seed[0].frames)) )
+        stds = np.zeros( (len(self.seeds), len(self.seed[0].frames)) )
+        for i, seed in enumerate( self.seeds):
+            means[i,:], std[i,:] = Plots.getSylinderMeanPropertyNorm( seed.frames, quantity)
+
+        # Find mean and std
+        mean = np.mean( means, axis=0)
+        std = np.mean( stds, axis=0)
+        time = timestep*np.arange( len(mean) )
+
+        # Plot 
+        ax.plot(time, mean, color=color)
+        ax.fill_between(time, mean-std, mean+std, color='m', alpha=err_alpha)
+        ax.set_xlabel( Plots.getPropertyLabel('time') )
+        ax.set_ylabel( Plots.getPropertyLabel(quantity) )
 
 
 if __name__ == '__main__':
