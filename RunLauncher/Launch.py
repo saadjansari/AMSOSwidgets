@@ -2,81 +2,90 @@
 # This is program and cluster specific
 
 import os, pdb, yaml
-import subprocess
+from popen2 import popen2
+# import subprocess
 import numpy as np
 from shutil import copytree, ignore_patterns, rmtree
 # from sklearn.grid_search import ParameterGrid
 from sklearn.model_selection import ParameterGrid
+
+
+def Launch():
+
+    # Specify options for run launcher
+    options = {
+            'routine' : 'singlecore', # singlecore or multicore
+            'name' : 'AMSOSrun',
+            'qos' : 'condo',
+            'partition' : 'shas',
+            'account' : 'ucb-summit-smr',
+            'time' : '00:10:00',
+            # Define architecture of clusters
+            'coresPerNode' : 24,
+            'socksPerNode' : 2,
+            }
+
+    # Initialize the runs
+    simPaths, seedPaths, nTasks = Initialize() 
+
+    # Update Random Seeds
+    UpdateRandomSeeds( ['runConfig.yaml'], ['rngSeed'], seedPaths)
+
+    # Write launch script
+    jobStrings = WriteSimLaunchString( options, simPaths, seedPaths)
+
+    for string in jobStrings:
+        pdb.set_trace()
+        print(string)
+    
+    # Launch
+    # # open pipe to sbatch command
+    # output, input = popen2('sbatch')
+    # # send job to sbatch
+    # input.write( jobString)
+    # input.close()
+    # # Print your job and the response to the screen
+    # print(jobString)
+    # print( output.read() )
+    
+    # Launch individually
+    # os.chdir( 'runs')
+    # cwd = os.getcwd()
+    # files = os.listdir( os.getcwd())
+    # for fil in files:
+        # os.chdir( os.path.join( cwd,fil))
+        # subprocess.call(["sbatch", "amsos.jobscript"])
 
 def Initialize():
     
     # Read param file
     stream = open( "Params.yaml", 'r')
     ydict = yaml.load( stream)
+    nSeeds = ydict['seeds']
     
     # Get parameter grid
     grid = CreateParameterGrid( ydict)
 
     # Initialize directories
-    folds = InitializeDirectories( grid)
+    simPaths, seedPaths, nTasks = InitializeDirectories( grid, nSeeds)
 
-    # Update Parameters
-    UpdateParameters( grid, folds)
+    # Update yaml parameters for each sim 
+    UpdateYamlSim( grid, simPaths, nSeeds)
 
-def UpdateParameters( grid, folds):
-    # Update parameters in the run yaml files 
+    return simPaths, seedPaths, nTasks
 
-    for fold,run in zip( folds, grid):
-
-        print('Run :'+fold)
-        for key, value in run.items():
-
-            keys = key.split('___')
-            # Load yaml file
-            yname = os.path.join( fold, keys[0] + '.yaml')
-            data = yaml.load( open( yname, 'r') )
-
-            # Update parameter
-            data[keys[1]] = value[0]
-
-            # Write yaml file
-            with open(yname, 'w') as yaml_file:
-                # yaml_file.write( yaml.dump( data, default_flow_style=False))
-                yaml_file.write( yaml.dump( data))
-
-            print('  '+key+' : '+str(value[0]))
-
-def InitializeDirectories( grid):
-    # Initialize directories and copy all files to respective folders
-
-    parentName = 'runs'
-    if os.path.exists( parentName):
-        rmtree( parentName)
-    os.mkdir( parentName)
-
-    folds = []
-    for item in grid:
-
-        # Construct folder name
-        labs = [val[1] for key,val in item.items()]
-        folderName = "_".join(labs)
-        fpath = os.path.join( os.getcwd(), parentName, folderName)
-
-        # Copy all files to folder
-        if os.path.exists( fpath):
-            rmtree( fpath)
-        dest = copytree( os.getcwd(), fpath, ignore=ignore_patterns('Launch.py*','Initialize.py*', 'run*'))
-        folds += [fpath]
-
-    return folds
 
 def CreateParameterGrid( yamldict):
+
+    # Exit if there are no parameters to vary
+    if 'files' not in yamldict:
+        return ['sim'] 
 
     # Initialize a dictionary of parameter information
     params = {}
 
     # Loop over parameters and add them to the dictionary
-    for fil, fdat in yamldict.items():
+    for fil, fdat in yamldict['files'].items():
         for key, dat in fdat.items():
             
             # Get list of values and labels
@@ -119,91 +128,202 @@ def CreateParameterGrid( yamldict):
 
     return grid
 
-def WriteLaunchScript():
-    # create a bash script for executing the jobs
+def InitializeDirectories( grid, nSeeds):
+    # Initialize directories and copy all files to respective folders
 
-    nJobs = WriteJobsFile()
+    # Define parent name where the run will be stored. Initialize the dir
+    if grid != ['sim']:
+        parentName = 'run'
+        if os.path.exists( parentName):
+            rmtree( parentName)
+        os.mkdir( parentName)
+
+    simPaths = []
+    seedPaths = []
+    for item in grid:
+        # Construct sim path 
+        if item == 'sim':
+            simName = item
+            simPath = os.path.join( os.getcwd(), simName) 
+        else:
+            simName = "_".join( [val[1] for key,val in item.items()] )
+            simPath = os.path.join( os.getcwd(), parentName, simName) 
+
+        # Delete simPath if it exists
+        if os.path.exists( simPath):
+            rmtree( simPath)
+
+        # Add simPath to collection of simPaths
+        simPaths += [simPath]
+
+        for seed in range(nSeeds):
+
+            # Construct seed folder name
+            seedPath = os.path.join( simPath, 's{0}'.format(seed) )
+            
+            # Copy files to all seed folders
+            dest = copytree( os.getcwd(), seedPath, ignore=ignore_patterns('Launch.py*','run*', 'sim', 'data'))
+
+            # Add seedPath to collection of seedPaths
+            seedPaths += [seedPath]
+
+    nTasks =  nSeeds * len(simPaths)
+    return simPaths, seedPaths, nTasks 
+
+def UpdateYamlSim( grid, simPaths, nSeeds):
+    # Update parameters in the yaml files for each sim
+
+    if grid == ['sim']:
+        return
+
+    print('Seeds = {0}'.format(nSeeds))
+    for simPath,sim in zip( simPaths, grid):
+
+        print('Sim : '+simPath)
+        for key, value in sim.items():
+
+            keys = key.split('___')
+            for seed in range(nSeeds):
+
+                # Seed path
+                seedPath = os.path.join( simPath, 's{0}'.format(seed) )
+
+                # Load yaml file
+                yname = os.path.join( seedPath,'{0}.yaml'.format(keys[0]))
+                data = yaml.load( open( yname, 'r') )
+
+                # Update parameter
+                data[keys[1]] = value[0]
+
+                # Write yaml file
+                with open(yname, 'w') as yaml_file:
+                    yaml_file.write( yaml.dump( data))
+
+            print('  {0} : {1}'.format(key, str(value[0])))
+
+def UpdateRandomSeeds( filenames, paramnames, seedPaths):
+    # Update random seed in yaml files 
+
+    for idx, seedPath in enumerate( seedPaths):
+
+        for fil,par in zip(filenames, paramnames):
+
+            yname = os.path.join( seedPath,'{0}'.format(fil))
+            data = yaml.load( open( yname, 'r') )
+
+            # Update seed 
+            data[par] = data[par]+idx 
+
+            # Write yaml file
+            with open(yname, 'w') as yaml_file:
+                yaml_file.write( yaml.dump( data))
+
+def WriteSimLaunchString( slurm, simPaths, seedPathsAll):
+    # write strings to send to sbatch for each sim 
+
+    jobStrings = []
+    for spath in simPaths:
+
+        # find seeds associated with this sim
+        seedPaths = [s for s in seedPathsAll if spath in s]
     
-    f_launch = open('run.launch.sh', "w+")
-    # identiy bash evironment and define sbatch options
-    f_launch.write( '#!/bin/bash\n\n')
-    f_launch.write( '#SBATCH --job-name=TubSim\n')
-    f_launch.write( '#SBATCH --qos=condo\n')
-    f_launch.write( '#SBATCH --partition=shas\n')
-    f_launch.write( '#SBATCH --account=ucb-summit-smr\n')
-    f_launch.write( '#SBATCH --output=sim.log\n')
-    f_launch.write( '#SBATCH --error=sim.err\n')
-    f_launch.write( '#SBATCH --time=00:05:00\n')
+        # Number of tasks
+        nTasks = len( seedPaths)
 
-    routine = 'singlecore'
-    coresPerNode = 24
-    socksPerNode = 2
-    coresPerSock = 12
-    if routine == 'singlecore':
+        # Find cores per socket
+        coresPerSock = slurm['coresPerNode']/slurm['socksPerNode']
+
+        # Find number of nodes and number of processors/task
+        if slurm['routine'] == 'singlecore':
+            nCpuPerTask = 1
+            nNodes = int( np.ceil(nTasks/(float(slurm['coresPerNode'])/nCpuPerTask)) )
+            nTaskPerSock = coresPerSock
+        elif slurm['routine'] == 'multicore':
+            raise Exception('Remove me if you want to run multicore you crazy diamond')
+            nCpuPerTask = coresPerSock 
+            nNodes = int( np.ceil(nTasks/(float(slurm['coresPerNode'])/nCpuPerTask)) )
+            nTaskPerSock = 1
+
+        # Write jobscript
+        jobString = """#!/bin/bash
+
+#SBATCH --job-name={0}
+#SBATCH --qos={1}
+#SBATCH --partition={2}
+#SBATCH --account={3}
+#SBATCH --output=sim.log
+#SBATCH --error=sim.err
+#SBATCH --time={4}
+#SBATCH --nodes={5}
+#SBATCH --cpus-per-task={6}
+#SBATCH --ntasks-per-socket={7}
+
+export OMP_NUM_THREADS={8}
+export OMP_PROC_BIND=spread
+export OMP_PLACES=threads
+
+
+""".format( os.path.split(spath)[-1], slurm['qos'], slurm['partition'], slurm['account'], slurm['time'], nNodes, nCpuPerTask, nTaskPerSock, nCpuPerTask) 
+
+        # For each sim_seed, add to jobString
+        for pth in seedPaths:
+            command = 'srun -n1 --exclusive --mpi=pmi2 --chdir={0} AMSOS 1> {1} 2> {2} &\n'.format( pth, 'sim.log', 'sim.err')
+            jobString = jobString + command
+        jobString = jobString + "wait\n"
+
+        jobStrings += [jobString]
+
+    return jobStrings
+
+def WriteRunLaunchString( slurm, seedPaths):
+    # write a string to send to sbatch for the entire run 
+
+    # Number of tasks
+    nTasks = len( seedPaths)
+
+    # Find cores per socket
+    coresPerSock = slurm['coresPerNode']/slurm['socksPerNode']
+
+    # Find number of nodes and number of processors/task
+    if slurm['routine'] == 'singlecore':
         nCpuPerTask = 1
-        nNodes = int( np.ceil(nJobs/(float(coresPerNode)/nCpuPerTask)) )
-        f_launch.write( '#SBATCH --nodes={0}\n'.format(nNodes) )
-        f_launch.write( '#SBATCH --ntasks={0}\n'.format(nJobs) )
-        f_launch.write( '#SBATCH --cpus-per-task={0}\n'.format(nCpuPerTask) )
-
-    elif routine == 'multicore':
+        nNodes = int( np.ceil(nTasks/(float(slurm['coresPerNode'])/nCpuPerTask)) )
+        nTaskPerSock = coresPerSock
+    elif slurm['routine'] == 'multicore':
         raise Exception('Remove me if you want to run multicore you crazy diamond')
-        nCpuPerTask = socksPerNode 
-        nNodes = int( np.ceil(nJobs/(float(coresPerNode)/nCpuPerTask)) )
-        f_launch.write( '#SBATCH --nodes={0}\n'.format(nNodes) )
-        f_launch.write( '#SBATCH --ntasks={0}\n'.format(nJobs) )
-        f_launch.write( '#SBATCH --ntasks-per-socket=1\n')
-        f_launch.write( '#SBATCH --cpus-per-task={0}\n'.format(nCpuPerTask) )
+        nCpuPerTask = coresPerSock 
+        nNodes = int( np.ceil(nTasks/(float(slurm['coresPerNode'])/nCpuPerTask)) )
+        nTaskPerSock = 1
 
-    f_launch.write( '\nmodule load loadbalance\n')
+    # Write jobscript
+    jobString = """#!/bin/bash
 
-    f_launch.write( '\nexport OMP_NUM_THREADS={0}\n'.format(nCpuPerTask))
-    f_launch.write( 'export OMP_PROC_BIND=spread\n')
-    f_launch.write( 'export OMP_PLACES=threads\n')
+#SBATCH --job-name={0}
+#SBATCH --qos={1}
+#SBATCH --partition={2}
+#SBATCH --account={3}
+#SBATCH --output=sim.log
+#SBATCH --error=sim.err
+#SBATCH --time={4}
+#SBATCH --nodes={5}
+#SBATCH --cpus-per-task={6}
+#SBATCH --ntasks-per-socket={7}
 
-    # Job execution command
-    f_launch.write( '\nmpirun lb {0}\n'.format('run.jobs') )
+export OMP_NUM_THREADS={8}
+export OMP_PROC_BIND=spread
+export OMP_PLACES=threads
 
-    # close the file
-    f_launch.close()
-    print( 'Successful write to launch file!') 
 
-def WriteJobsFile():
-    # write list of bash commands to be executed by loadbalancer
+    """.format( slurm['name'], slurm['qos'], slurm['partition'], slurm['account'], slurm['time'], nNodes, nCpuPerTask, nTaskPerSock, nCpuPerTask) 
 
-    # open file
-    print( 'Writing jobs file...')
-    f_jobs = open('run.jobs', "w+")
+    # For each sim_seed, add to jobString
+    for pth in seedPaths:
+        command = 'srun -n1 --exclusive --mpi=pmi2 --chdir={0} AMSOS 1> {1} 2> {2} &\n'.format( pth, 'sim.log', 'sim.err')
+        jobString = jobString + command
+    jobString = jobString + "wait\n"
 
-    # Prefix for job command
-    cmd_pre = 'srun --mpi=pmi2 '
-    # Suffix for job command
-    cmd_post = '"\n'
-    
-    # Get list of runs to start
-    folds = os.listdir( os.path.join(os.getcwd(), 'runs'))
-    
-    for fpath in folds:
-        cmd_launch = 'cd {0}; srun --mpi=pmi2 AMSOS \n'.format( os.path.join(os.getcwd(),'runs',fpath) )
-        f_jobs.write( cmd_launch) 
-    
-    f_jobs.close()
-    print( 'Successful write to jobs file!') 
+    return jobString
 
-    return len(folds) 
 
 if __name__ == "__main__":
-
-    # Initialize the runs
-    Initialize() 
-
-    # Launch individually
-    os.chdir( 'runs')
-    cwd = os.getcwd()
-    files = os.listdir( os.getcwd())
-    for fil in files:
-        os.chdir( os.path.join( cwd,fil))
-        subprocess.call(["sbatch", "amsos.jobscript"])
-
-    # Write launch script
-    # WriteLaunchScript()
+    Launch()
