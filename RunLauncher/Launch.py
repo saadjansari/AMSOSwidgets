@@ -14,7 +14,7 @@ def Launch():
 
     # Specify options for run launcher
     options = {
-            'routine' : 'singlecore', # singlecore or multicore
+            'routine' : 'multicore', # singlecore or multicore
             'name' : 'AMSOSrun',
             'qos' : 'condo',
             'partition' : 'shas',
@@ -29,24 +29,21 @@ def Launch():
     simPaths, seedPaths, nTasks = Initialize() 
 
     # Update Random Seeds
-    UpdateRandomSeeds( ['runConfig.yaml'], ['rngSeed'], seedPaths)
+    UpdateRandomSeeds( ['RunConfig.yaml'], ['rngSeed'], seedPaths)
 
     # Write launch script
     jobStrings = WriteSimLaunchString( options, simPaths, seedPaths)
 
-    for string in jobStrings:
-        pdb.set_trace()
-        print(string)
-    
     # Launch
-    # # open pipe to sbatch command
-    # output, input = popen2('sbatch')
-    # # send job to sbatch
-    # input.write( jobString)
-    # input.close()
-    # # Print your job and the response to the screen
-    # print(jobString)
-    # print( output.read() )
+    for string in jobStrings:
+        # open pipe to sbatch command
+        output, input = popen2('sbatch')
+        # send job to sbatch
+        input.write( string)
+        input.close()
+        # Print your job and the response to the screen
+        print(string)
+        print( output.read() )
     
     # Launch individually
     # os.chdir( 'runs')
@@ -239,7 +236,7 @@ def WriteSimLaunchString( slurm, simPaths, seedPathsAll):
             nNodes = int( np.ceil(nTasks/(float(slurm['coresPerNode'])/nCpuPerTask)) )
             nTaskPerSock = coresPerSock
         elif slurm['routine'] == 'multicore':
-            raise Exception('Remove me if you want to run multicore you crazy diamond')
+            # raise Exception('Remove me if you want to run multicore you crazy diamond')
             nCpuPerTask = coresPerSock 
             nNodes = int( np.ceil(nTasks/(float(slurm['coresPerNode'])/nCpuPerTask)) )
             nTaskPerSock = 1
@@ -267,7 +264,8 @@ export OMP_PLACES=threads
 
         # For each sim_seed, add to jobString
         for pth in seedPaths:
-            command = 'srun -n1 --exclusive --mpi=pmi2 --chdir={0} AMSOS 1> {1} 2> {2} &\n'.format( pth, 'sim.log', 'sim.err')
+            # command = 'srun -n1 --exclusive --mpi=pmi2 --chdir={0} AMSOS 1> {1} 2> {2} &\n'.format( pth, 'sim.log', 'sim.err')
+            command = 'srun -n1 --exclusive --mpi=pmi2 --chdir={0} AMSOS 1> {1} 2> {2} &\n'.format( pth, os.path.join(pth,'sim.log'), os.path.join(pth,'sim.err'))
             jobString = jobString + command
         jobString = jobString + "wait\n"
 
@@ -318,7 +316,8 @@ export OMP_PLACES=threads
 
     # For each sim_seed, add to jobString
     for pth in seedPaths:
-        command = 'srun -n1 --exclusive --mpi=pmi2 --chdir={0} AMSOS 1> {1} 2> {2} &\n'.format( pth, 'sim.log', 'sim.err')
+        # command = 'srun -n1 --exclusive --mpi=pmi2 --chdir={0} AMSOS 1> {1} 2> {2} &\n'.format( pth, 'sim.log', 'sim.err')
+        command = 'srun -n1 --exclusive --mpi=pmi2 --chdir={0} AMSOS 1> {1} 2> {2} &\n'.format( pth, os.path.join(pth,'sim.log'), os.path.join(pth,'sim.err'))
         jobString = jobString + command
     jobString = jobString + "wait\n"
 
