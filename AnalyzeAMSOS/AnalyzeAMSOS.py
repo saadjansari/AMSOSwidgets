@@ -4,7 +4,6 @@ import sys, os, pdb
 import glob, re 
 import pickle, yaml, vtk, copy, shutil
 import argparse
-# from sklearn.grid_search import ParameterGrid
 from sklearn.model_selection import ParameterGrid
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,7 +20,9 @@ Description: Command that calls specific bulk analysis programs
 Input: To see type AnalyzeAMSOS.py -h
 Output: See above
 '''
+
 def parseArgs():
+
     parser = argparse.ArgumentParser(prog='AnalyzeAMSOS.py')
     parser.add_argument('-R', '--run', action='store_true', default=False, help='Launch analysis of runs')
     parser.add_argument('-S', '--sim', action='store_true', default=False, help='Launch analysis of sims')
@@ -29,58 +30,6 @@ def parseArgs():
 
     opts = parser.parse_args()
     return opts
-
-# member variables are dynamically added by parsing data files
-# for Sylinder
-class Sylinder(object):
-    end0 = None
-    end1 = None
-    pass
-
-class Frame(object):
-    def __init__(self, sylinderFile=None):
-        self.sylinders = []
-        self.parseSylinderFile(sylinderFile)
-
-    def parseFile(self, dataFile, objType, objList):
-        # print("Parsing data from " + dataFile)
-        # create vtk reader
-        reader = vtk.vtkXMLPPolyDataReader()
-        reader.SetFileName(dataFile)
-        reader.Update()
-        data = reader.GetOutput()
-
-        # fill data
-        # step 1, end coordinates
-        nObj = int(data.GetPoints().GetNumberOfPoints() / 2)
-        for i in range(nObj):
-            s = objType()
-            s.end0 = data.GetPoints().GetPoint(2 * i)
-            s.end1 = data.GetPoints().GetPoint(2 * i + 1)
-            objList.append(s)
-
-        # step 2, member cell data
-        numCellData = data.GetCellData().GetNumberOfArrays()
-        for i in range(numCellData):
-            cdata = data.GetCellData().GetArray(i)
-            dataName = cdata.GetName()
-            # print("Parsing Cell Data", dataName)
-            for j in range(len(objList)):
-                setattr(objList[j], dataName, cdata.GetTuple(j))
-
-        # step 3, member point data
-        numPointData = data.GetPointData().GetNumberOfArrays()
-        for i in range(numPointData):
-            pdata = data.GetPointData().GetArray(i)
-            dataName = pdata.GetName()
-            # print("Parsing Point Data", dataName)
-            for j in range(len(objList)):
-                setattr(objList[j], dataName + "0", pdata.GetTuple(2 * j))
-                setattr(objList[j], dataName + "1", pdata.GetTuple(2 * j + 1))
-
-    def parseSylinderFile(self, sylinderFile):
-        self.parseFile(sylinderFile, Sylinder, self.sylinders)
-
 
 class Sim(object):
 
@@ -138,7 +87,7 @@ class Run(object):
     def __init__(self, cwd = None, label = 'default'):
 
         if not cwd:
-            self.cwd = os.getcwd() 
+            self.cwd = os.path.join( os.getcwd(), 'run')
         else:
             self.cwd = cwd
 
@@ -153,6 +102,11 @@ class Run(object):
             print('Loading run pickle file...')
             with open( pklFull, 'rb') as f:
                 self.sims, self.params = pickle.load(f)
+
+                # Update the working directory of sims
+                for sim in self.sims:
+                    pathnew = os.path.join( self.cwd, os.path.split( sim.cwd)[-1])
+                    sim.cwd = pathnew
             # Create sim directories if they dont exist
             for sim in self.sims:
                 if not os.path.exists( sim.cwd) :
@@ -176,7 +130,8 @@ class Run(object):
                 pickle.dump( [self.sims,self.params], f) 
 
         # Specify variables to graph
-        self.graph_vars_onedog = ['velBrown', 'velNonBrown']
+        # self.graph_vars_onedog = ['velBrown']
+        self.graph_vars_onedog = ['velBrown', 'velNonBrown', 'vel', 'force', 'torque']
 
 
     def ProcessParams(self):
@@ -270,6 +225,12 @@ class Run(object):
                 timestep = sim.config['RunConfig']['timeSnap']
                 lab = free_var[1]+' = '+str(sim.config[free_var[0]][free_var[1]])
                 Plots.plotSylinderMeanQuantityNormTime( sim.frames, var, axs, c, label=lab, timestep=timestep )
+                
+            if isinstance( axs, np.ndarray):
+                for ax in axs:
+                    ax.legend()
+            else:
+                axs.legend()
 
             fig.suptitle(figname)
             fig.savefig(figname+'.pdf')

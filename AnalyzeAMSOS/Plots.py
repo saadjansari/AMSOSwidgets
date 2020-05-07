@@ -7,39 +7,47 @@ import matplotlib.pyplot as plt
 from unit_dict import UnitDict
 ud = UnitDict()
 
-def main(frames):
-
-    fig, axs = plt.subplots( 1,2,figsize=(12,6))
-
-    plotSylinderAllQuantityNorm( frames, 'velBrown', axs[0])
-    plotSylinderMeanQuantityNorm( frames, 'velBrown', axs[1])
-    plt.show()
-
-def plotSylinderAllQuantityNormTime( frames, quant, ax, timestep=1):
+def getSylinderPropertyNorm( frames, quant):
     # input: frames is a list of objects of class Frame
     
-    for i in range(len(frames[0].sylinders)):
-        vec = [np.linalg.norm( getattr( frame.sylinders[i], quant) ) for frame in frames]
-        ax.plot( vec, timestep*np.array( range(len(frames))) )
+    nSyl = len( frames[0].sylinders)
+    propAll = np.zeros( (nSyl, len(frames)))
+    for i in range( nSyl):
+        propAll[i,:] = [np.linalg.norm( getattr( frame.sylinders[i], quant) ) for frame in frames]
+    return propAll 
 
-    ax.set_xlabel( 'time (s)')
-    ax.set_ylabel( quant)
+def getPropertyLabel( quant):
+    # Get label with units
+    if not ud.ud[quant]:
+        lab = quant
+    else:
+        lab = '{0} {1}'.format(quant, ud.ud[quant])
+    return lab
 
-def plotSylinderMeanQuantityNormTime( frames, quant, ax, col, label='', timestep=1):
+def graphSylinderAllPropertyNorm( frames, quant, ax, timestep=1, alpha=1):
+    # input: frames is a list of objects of class Frame
+    
+    propAll = getSylinderPropertyNorm()
+    for row in propAll:
+        ax.plot( row, timestep*np.arange(len(row)), alpha=alpha)
+
+    ax.set_xlabel( getPropertyLabel('time') )
+    ax.set_ylabel( getPropertyLabel(quant) )
+
+def plotSylinderMeanPropertyNorm( frames, quant, ax, color='m', label='', timestep=1, err_alpha=0.3):
     # input: frames is a list of objects of class Frame
    
-    quantArr = np.zeros( (len(frames[0].sylinders), len(frames)))
-    for i in range(len(frames[0].sylinders)):
-        quantArr[i,:] = [np.linalg.norm( getattr( frame.sylinders[i], quant) ) for frame in frames]
+    propAll = getSylinderPropertyNorm()
+    shape = propAll.shape()
 
-    times = timestep*np.array( range(len(frames)))
+    times = timestep*np.arange( len(shape[0]) )
     means = np.mean( quantArr, axis=0)
     stds = np.std( quantArr, axis=0)
 
-    ax.plot(times, means, color=col)
-    ax.fill_between(times, means-stds, means+stds, color=col, alpha=0.3)
-    ax.set_xlabel( 'time '+ud.ud['time'])
-    ax.set_ylabel( quant + ' '+ud.ud[quant])
+    ax.plot(times, means, color=color, label=label)
+    ax.fill_between(times, means-stds, means+stds, color=col, alpha=err_alpha)
+    ax.set_xlabel( getPropertyLabel('time') )
+    ax.set_ylabel( getPropertyLabel(quant) )
 
 
 if __name__ == "__main__":
