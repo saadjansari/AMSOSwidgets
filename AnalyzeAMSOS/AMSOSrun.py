@@ -2,7 +2,7 @@
 
 import sys, os, pdb
 import glob, re 
-import pickle, vtk, copy, shutil
+import pickle, vtk, yaml, copy, shutil
 from sklearn.model_selection import ParameterGrid
 import numpy as np
 import matplotlib.pyplot as plt
@@ -73,7 +73,7 @@ class Run(object):
                 self.sims += [Sim( os.path.join( self.cwd,f), f)]
 
             # Load params
-            with open( os.path.join(self.sims[0].cwd,'Params.yaml')) as f:
+            with open( os.path.join(self.sims[0].seeds[0].cwd,'Params.yaml')) as f:
                 self.params = yaml.load( f)
 
             # Save pickle file

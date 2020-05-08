@@ -2,8 +2,8 @@
 # This is program and cluster specific
 
 import os, pdb, yaml
-from popen2 import popen2
-# import subprocess
+# from popen2 import popen2
+import subprocess
 import numpy as np
 from shutil import copytree, ignore_patterns, rmtree
 # from sklearn.grid_search import ParameterGrid
@@ -19,7 +19,7 @@ def Launch():
             'qos' : 'condo',
             'partition' : 'shas',
             'account' : 'ucb-summit-smr',
-            'time' : '00:10:00',
+            'time' : '00:01:00',
             # Define architecture of clusters
             'coresPerNode' : 24,
             'socksPerNode' : 2,
@@ -32,26 +32,26 @@ def Launch():
     UpdateRandomSeeds( ['RunConfig.yaml'], ['rngSeed'], seedPaths)
 
     # Write launch script
-    jobStrings = WriteSimLaunchString( options, simPaths, seedPaths)
+    # jobStrings = WriteSimLaunchString( options, simPaths, seedPaths)
+    jobStrings = WriteSeedLaunchString( options, simPaths, seedPaths)
 
-    # Launch
-    for string in jobStrings:
-        # open pipe to sbatch command
-        output, input = popen2('sbatch')
-        # send job to sbatch
-        input.write( string)
-        input.close()
-        # Print your job and the response to the screen
-        print(string)
-        print( output.read() )
+    # # Sim Launch
+    # for string in jobStrings:
+        # # open pipe to sbatch command
+        # output, input = popen2('sbatch')
+        # # send job to sbatch
+        # input.write( string)
+        # input.close()
+        # # Print your job and the response to the screen
+        # print(string)
+        # print( output.read() )
     
     # Launch individually
-    # os.chdir( 'runs')
-    # cwd = os.getcwd()
-    # files = os.listdir( os.getcwd())
-    # for fil in files:
-        # os.chdir( os.path.join( cwd,fil))
-        # subprocess.call(["sbatch", "amsos.jobscript"])
+    for spath, jobString in zip( seedPaths, jobStrings):
+        os.chdir( spath)
+        with open('jobscript.sh', 'w') as f:
+            f.write( jobString)
+        subprocess.call(["sbatch", "jobscript.sh"])
 
 def Initialize():
     
@@ -214,6 +214,59 @@ def UpdateRandomSeeds( filenames, paramnames, seedPaths):
             # Write yaml file
             with open(yname, 'w') as yaml_file:
                 yaml_file.write( yaml.dump( data))
+
+def WriteSeedLaunchString( slurm, simPaths, seedPaths):
+    # write strings to send to sbatch for each seed. Also save it to a file in the seed directory for running later if needed
+
+    jobStrings = []
+    nTasks = 1
+    # Find cores per socket
+    coresPerSock = slurm['coresPerNode']/slurm['socksPerNode']
+       
+    # Define jobString
+    jobStringDef = """#!/bin/bash
+
+#SBATCH --job-name={0}
+#SBATCH --qos={1}
+#SBATCH --partition={2}
+#SBATCH --account={3}
+#SBATCH --output=sim.log
+#SBATCH --error=sim.err
+#SBATCH --time={4}
+#SBATCH --nodes={5}
+#SBATCH --cpus-per-task={6}
+#SBATCH --ntasks-per-socket={7}
+
+export OMP_NUM_THREADS={8}
+export OMP_PROC_BIND=spread
+export OMP_PLACES=threads
+
+
+"""
+    # Loop over seeds and make job strings to launch
+    for spath in seedPaths:
+
+        # Find number of nodes and number of processors/task
+        if slurm['routine'] == 'singlecore':
+            nCpuPerTask = 1
+            nNodes = int( np.ceil(nTasks/(float(slurm['coresPerNode'])/nCpuPerTask)) )
+            nTaskPerSock = coresPerSock
+        elif slurm['routine'] == 'multicore':
+            # raise Exception('Remove me if you want to run multicore you crazy diamond')
+            nCpuPerTask = coresPerSock 
+            nNodes = int( np.ceil(nTasks/(float(slurm['coresPerNode'])/nCpuPerTask)) )
+            nTaskPerSock = 1
+
+        # Jobname : SimName_SeedNumber
+        jobName = '__'.join( spath.split('/')[-2:] )
+
+        # Write jobString 
+        jobString = jobStringDef.format( jobName, slurm['qos'], slurm['partition'], slurm['account'], slurm['time'], nNodes, nCpuPerTask, nTaskPerSock, nCpuPerTask) 
+
+        jobString = jobString + 'srun -n1 --mpi=pmi2 AMSOS\n' 
+        jobStrings += [jobString]
+
+    return jobStrings
 
 def WriteSimLaunchString( slurm, simPaths, seedPathsAll):
     # write strings to send to sbatch for each sim 

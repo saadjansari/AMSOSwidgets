@@ -30,6 +30,8 @@ def parseArgs():
     parser.add_argument('-R', '--run', action='store_true', default=False, help='Launch analysis of runs')
     parser.add_argument('-S', '--sim', action='store_true', default=False, help='Launch analysis of sims')
     parser.add_argument('-G', '--graph', action='store_true', default=False, help='Make graphs')
+    parser.add_argument('--clean', action='store_true', default=False, help='Clean pickle files and exit')
+
 
     opts = parser.parse_args()
     return opts
@@ -38,6 +40,21 @@ class Analysis(object):
     def __init__(self, opts):
 
         self.opts = opts
+
+        # Clear
+        if opts.clean:
+            print('Cleaning pickle files')
+            # XXX : Python 3
+            # files = glob.iglob('**.pickle', recursive=True)
+            # pdb.set_trace()
+            # for f in files:
+                # os.remove( f)
+            # XXX : Python 2
+            files = glob.glob('./*.pickle') + glob.glob('./*/*.pickle') + glob.glob('./*/*/*.pickle')
+            for f in files:
+                os.remove( f)
+            return
+
         if opts.run:
             print('Analyzing Run')
             run = Run()

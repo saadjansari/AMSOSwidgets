@@ -59,12 +59,12 @@ class Frame(object):
         # step 1, end coordinates
         nObj = int(data.GetPoints().GetNumberOfPoints() / 2)
         for i in range(nObj):
-            s = objType()
-            s.end0 = data.GetPoints().GetPoint(2 * i)
-            s.end1 = data.GetPoints().GetPoint(2 * i + 1)
-            xi = (s.end1-s.end0)
-            s.orientation = xi/np.sqrt(xi.dot(xi))
-            objList.append(s)
+            syl = objType()
+            syl.end0 = np.array( data.GetPoints().GetPoint(2 * i) )
+            syl.end1 = np.array( data.GetPoints().GetPoint(2 * i + 1) )
+            xi = syl.end1 - syl.end0 
+            syl.orientation = xi/np.sqrt(xi.dot(xi))
+            objList.append(syl)
 
         # step 2, member cell data
         numCellData = data.GetCellData().GetNumberOfArrays()
