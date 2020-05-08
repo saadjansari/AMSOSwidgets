@@ -86,9 +86,9 @@ class Run(object):
 
         varabs = []
         labels = []
-        for key, value in self.params.items():
+        for key, value in self.params['files'].items():
             varabs += [ (key,i) for i in value.keys()]
-            labels += [i['labelKey'] for i in self.params['RunConfig'].values()]
+            labels += [i['labelKey'] for i in self.params['files']['RunConfig'].values()]
 
         values = {}
         for key in varabs:
@@ -115,12 +115,13 @@ class Run(object):
         return varabs, uniques, uniqueFolds 
         
 
-    def Graph(self, quantities=['polarOrder, nematicOrder']):
+    def Graph(self, quantities=['polarOrder', 'nematicOrder']):
         
         # Initialize graphing data directory
         gdir = os.path.join( self.cwd, 'data')
         if os.path.exists( gdir):
             shutil.rmtree( gdir, ignore_errors=True)
+        os.mkdir(gdir)
         os.chdir( gdir)
 
         # Process parameters for graphing
@@ -147,7 +148,7 @@ class Run(object):
                 sims = [ sim for sim in self.sims if any( [sim.label == fold for fold in folds]) ]
 
                 # Call graphing function
-                self.GraphParamOneDog( sims, free_var=keys, fixed_var=varabsX)
+                self.GraphParamOneDog( sims, free_var=keys, fixed_var=varabsX, quantities=quantities)
 
         # Graph Sims
         for sim in self.sims:
@@ -155,7 +156,7 @@ class Run(object):
 
             os.chdir( self.cwd)
     
-    def GraphParamOneDog( self, sims, free_var, fixed_var):
+    def GraphParamOneDog( self, sims, free_var, fixed_var, quantities=['polarOrder','nematicOrder']):
 
         # Create directories
         if not os.path.exists(  os.path.join( self.cwd, 'data')):
@@ -163,7 +164,7 @@ class Run(object):
         os.chdir( os.path.join(self.cwd,'data'))
 
         # graphing for each variable
-        for var in self.graph_vars_onedog:
+        for var in quantities:
             if not os.path.exists(  os.path.join( self.cwd, 'data', var)):
                 os.mkdir( os.path.join( self.cwd,'data', var))
             os.chdir( os.path.join(self.cwd,'data', var))
@@ -176,9 +177,8 @@ class Run(object):
             for sim, c in zip(sims, clrs):
 
                 # Get timestep and label
-                timestep = sim.config['RunConfig']['timeSnap']
                 lab = free_var[1]+' = '+str(sim.config[free_var[0]][free_var[1]])
-                Plots.plotSylinderMeanQuantityNormTime( sim.frames, var, axs, c, label=lab, timestep=timestep )
+                sim.GraphSeedsPropertyMean( var, ax=axs, color=c, label=lab)
                 
             if isinstance( axs, np.ndarray):
                 for ax in axs:
@@ -189,3 +189,6 @@ class Run(object):
             fig.suptitle(figname)
             fig.savefig(figname+'.pdf')
             plt.close()
+
+if __name__ == "__main__":
+    print("not implemented yet")

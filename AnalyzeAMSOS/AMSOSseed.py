@@ -66,14 +66,15 @@ class Seed(object):
 
         # Get timestep 
         timestep = self.config['RunConfig']['timeSnap']
-        Plots.graphSylinderMeanPropertyNorm( self.frames, quantity, ax, color=color, timestep=timestep)
+        Plots.graphSylinderMeanPropertyNorm( self.frames, quantity, ax, color=color, timestep=timestep, label=label)
 
-    def Graph(self, quantities=['polarOrder, nematicOrder']):
+    def Graph(self, quantities=['polarOrder', 'nematicOrder']):
 
         # Initialize graphing data directory
         gdir = os.path.join( self.cwd, 'data')
         if os.path.exists( gdir):
             shutil.rmtree( gdir, ignore_errors=True)
+        os.mkdir(gdir)
         os.chdir( gdir)
 
         for quant in quantities:
@@ -81,7 +82,7 @@ class Seed(object):
             # Create figure 
             fig, ax = plt.subplots( 1,1, figsize=(6,6) )
             self.GraphProperty( quant, ax)
-            fig.suptitle( '{0}__{1}'.format(seed.label,quant))
+            fig.suptitle( '{0}__{1}'.format(self.label,quant))
             fig.savefig( quant+'.pdf')
             plt.close()
 

@@ -13,18 +13,20 @@ def getSylinderPropertyNorm( frames, quant):
     nSyl = len( frames[0].sylinders)
     propAll = np.zeros( (nSyl, len(frames)))
     for i in range( nSyl):
-        propAll[i,:] = [np.linalg.norm( getattr( frame.sylinders[i], quant) ) for frame in frames]
+        try:
+            propAll[i,:] = [np.linalg.norm( getattr( frame.sylinders[i], quant) ) for frame in frames]
+        except:
+            pdb.set_trace()
+            print('1')
     return propAll 
 
 def getSylinderMeanPropertyNorm( frames, quant):
     # input: frames is a list of objects of class Frame
     
     propAll = getSylinderPropertyNorm( frames, quant)
-    shape = propAll.shape()
 
-    times = timestep*np.arange( len(shape[0]) )
-    means = np.mean( quantArr, axis=0)
-    stds = np.std( quantArr, axis=0)
+    means = np.mean( propAll, axis=0)
+    stds = np.std( propAll, axis=0)
 
     return means, stds
 
@@ -46,14 +48,14 @@ def graphSylinderAllPropertyNorm( frames, quant, ax, timestep=1, alpha=1):
     ax.set_xlabel( getPropertyLabel('time') )
     ax.set_ylabel( getPropertyLabel(quant) )
 
-def plotSylinderMeanPropertyNorm( frames, quant, ax, color='m', label='', timestep=1, err_alpha=0.3):
+def graphSylinderMeanPropertyNorm( frames, quant, ax, color='m', label='', timestep=1, err_alpha=0.3):
     # input: frames is a list of objects of class Frame
    
     means, stds = getSylinderMeanPropertyNorm( frames, quant)
     times = timestep*np.arange( len(means) )
 
     ax.plot(times, means, color=color, label=label)
-    ax.fill_between(times, means-stds, means+stds, color=col, alpha=err_alpha)
+    ax.fill_between(times, means-stds, means+stds, color=color, alpha=err_alpha)
     ax.set_xlabel( getPropertyLabel('time') )
     ax.set_ylabel( getPropertyLabel(quant) )
 

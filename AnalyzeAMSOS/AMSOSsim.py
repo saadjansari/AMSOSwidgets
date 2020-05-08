@@ -55,10 +55,11 @@ class Sim(object):
             # Find seed directories
             seedList = glob.glob( self.cwd+'/s*')
 
+            pdb.set_trace()
             # Initialize each seed 
             for f in seedList:
                 print('   Seed: '+ f)
-                self.seeds += [Seed( os.path.join( self.cwd,f), f)]
+                self.seeds += [Seed( os.path.join( self.cwd,f), os.path.split(f)[-1])]
 
             # Get config 
             self.config = self.seeds[0].config
@@ -68,14 +69,15 @@ class Sim(object):
             with open(fname, 'wb') as f:
                 pickle.dump( [self.seeds, self.config], f) 
 
-    def Graph(self, quantities=['polarOrder, nematicOrder']):
+    def Graph(self, quantities=['polarOrder', 'nematicOrder']):
 
         # Initialize graphing data directory
         gdir = os.path.join( self.cwd, 'data')
         if os.path.exists( gdir):
             shutil.rmtree( gdir, ignore_errors=True)
-
+        os.mkdir(gdir)
         os.chdir( gdir)
+
         for quant in quantities:
 
             # Create figure 
@@ -83,7 +85,7 @@ class Sim(object):
             self.GraphSeedsProperty( quant, ax[0])
             self.GraphSeedsPropertyMean( quant, ax[1])
 
-            fig.suptitle( '{0}__{1}'.format(sim.label,quant))
+            fig.suptitle( '{0}__{1}'.format(self.label,quant))
             fig.savefig( quant+'.pdf')
             plt.close()
 
@@ -112,7 +114,7 @@ class Sim(object):
             seed.GraphProperty( quantity, ax=ax, color=c, label=seed.label)
         ax.legend()
 
-    def GraphSeedsPropertyMean(self, quantity, ax=None, color='m', label=None, err_alpha=0.3):
+    def GraphSeedsPropertyMean(self, quantity, ax=None, color='m', label=None, err_alpha=0.2):
 
         # Create figure, ax if not provided
         if not ax:
@@ -122,19 +124,25 @@ class Sim(object):
         timestep = self.config['RunConfig']['timeSnap']
 
         # Data for each seed
-        means = np.zeros( (len(self.seeds), len(self.seed[0].frames)) )
-        stds = np.zeros( (len(self.seeds), len(self.seed[0].frames)) )
+        nFrame = max( [ len(s.frames) for s in self.seeds])
+        means = np.empty( (len(self.seeds), nFrame))
+        stds = np.empty( (len(self.seeds), nFrame))
+        means[:] = np.NaN
+        stds[:] = np.NaN
+        # means = np.zeros( (len(self.seeds), len(self.seeds[0].frames)) )
+        # stds = np.zeros( (len(self.seeds), len(self.seeds[0].frames)) )
         for i, seed in enumerate( self.seeds):
-            means[i,:], std[i,:] = Plots.getSylinderMeanPropertyNorm( seed.frames, quantity)
+            # means[i,:], stds[i,:] = Plots.getSylinderMeanPropertyNorm( seed.frames, quantity)
+            means[i,:len(seed.frames)],_ = Plots.getSylinderMeanPropertyNorm( seed.frames, quantity)
 
         # Find mean and std
-        mean = np.mean( means, axis=0)
-        std = np.mean( stds, axis=0)
+        mean = np.nanmean( means, axis=0)
+        std = np.nanstd( means, axis=0)
         time = timestep*np.arange( len(mean) )
 
         # Plot 
-        ax.plot(time, mean, color=color)
-        ax.fill_between(time, mean-std, mean+std, color='m', alpha=err_alpha)
+        ax.plot(time, mean, color=color, label=label)
+        ax.fill_between(time, mean-std, mean+std, color=color, alpha=err_alpha)
         ax.set_xlabel( Plots.getPropertyLabel('time') )
         ax.set_ylabel( Plots.getPropertyLabel(quantity) )
 

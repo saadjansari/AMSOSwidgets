@@ -18,6 +18,8 @@ class UnitDict():
             "viscosity": '(pN.s.${\mum}^{-2}$)',
             "KBT": '(pN.$\mu$m)',
             "distance" : '($\mu$m)', 
+            "nematicOrder" : '', 
+            "polarOrder" : '', 
             "end0" : '($\mu$m)',
             "end1" : '($\mu$m)',
             "endLabel0" : '',
