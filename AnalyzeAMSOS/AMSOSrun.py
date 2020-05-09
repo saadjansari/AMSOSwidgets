@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, os, pdb
 import glob, re 
@@ -32,7 +32,7 @@ class Run(object):
 
         # Specify variables to graph
         # self.graph_vars_onedog = ['velBrown']
-        self.graph_vars_onedog = ['velBrown', 'force', 'nematicOrder']
+        # self.graph_vars_onedog = ['velBrown', 'force', 'nematicOrder']
 
 
     def InitSims(self):
@@ -74,7 +74,7 @@ class Run(object):
 
             # Load params
             with open( os.path.join(self.sims[0].seeds[0].cwd,'Params.yaml')) as f:
-                self.params = yaml.load( f)
+                self.params = yaml.load( f, Loader=yaml.FullLoader)
 
             # Save pickle file
             print('Saving run pickle file...')
@@ -90,19 +90,20 @@ class Run(object):
             varabs += [ (key,i) for i in value.keys()]
             labels += [i['labelKey'] for i in self.params['files']['RunConfig'].values()]
 
-        values = {}
+        vals = {}
         for key in varabs:
-            values[key[0]+'_'+key[1]] = {}
+            vals[key[0]+'_'+key[1]] = {}
         for sim in self.sims:
             for key in varabs:
-                values[key[0]+'_'+key[1]][sim.label] = sim.config[key[0]][key[1]]
+                vals[key[0]+'_'+key[1]][sim.label] = sim.config[key[0]][key[1]]
 
         # Get unique values of each key
         uniques = {}
         print( 'Variable parameters:')
         for key in varabs:
-            uniques[key[0]+'_'+key[1]] = np.unique( np.array( [values[key[0]+'_'+key[1]].values()]) )
-            print( '  {0} : {1}'.format(key[0]+'_'+key[1], uniques[key[0]+'_'+key[1]]) )
+            jkey = '_'.join(key)
+            uniques[jkey] = np.unique( np.array( [x for x in vals[jkey].values()]) )
+            print( '  {0} : {1}'.format(jkey, uniques[jkey]) )
 
         # Get all folders corresponding to unique param values
         uniqueFolds = {}

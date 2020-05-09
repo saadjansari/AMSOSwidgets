@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, os, pdb
 import glob, re 
@@ -55,7 +55,6 @@ class Sim(object):
             # Find seed directories
             seedList = glob.glob( self.cwd+'/s*')
 
-            pdb.set_trace()
             # Initialize each seed 
             for f in seedList:
                 print('   Seed: '+ f)

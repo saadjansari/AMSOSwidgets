@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, os, pdb
 import glob, re 
@@ -54,9 +54,9 @@ class Seed(object):
                 }
         # load runconfig and proteinconfig yaml files
         with open(self.cwd+'/RunConfig.yaml') as f:
-            self.config['RunConfig'] = yaml.load( f)
+            self.config['RunConfig'] = yaml.load( f, Loader=yaml.FullLoader)
         with open(self.cwd+'/ProteinConfig.yaml') as f:
-            self.config['ProteinConfig'] = yaml.load( f)
+            self.config['ProteinConfig'] = yaml.load( f, Loader=yaml.FullLoader)
 
     def GraphProperty(self, quantity, ax=None, color='m', label=None):
 

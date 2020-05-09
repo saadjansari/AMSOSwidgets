@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, os, pdb
 
@@ -60,5 +60,5 @@ class UnitDict():
 
 ##########################################
 if __name__ == "__main__":
-    print "Not implemented yet"
+    print("Not implemented yet")
 
