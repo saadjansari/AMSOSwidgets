@@ -58,7 +58,7 @@ def Initialize():
     simPaths, seedPaths, nTasks = InitializeDirectories( ydict, grid, nSeeds)
 
     # Update yaml parameters for each sim 
-    UpdateYamlSim( grid, simPaths, nSeeds)
+    UpdateYamlSim( ydict, grid, simPaths, nSeeds)
 
     return simPaths, seedPaths, nTasks
 
@@ -140,7 +140,7 @@ def InitializeDirectories( ydict, grid, nSeeds):
     nTasks =  nSeeds * len(simPaths)
     return simPaths, seedPaths, nTasks 
 
-def UpdateYamlSim( grid, simPaths, nSeeds):
+def UpdateYamlSim( ydict, grid, simPaths, nSeeds):
     # Update parameters in the yaml files for each sim
 
     if grid == ['sim']:
@@ -183,6 +183,9 @@ def UpdateYamlSim( grid, simPaths, nSeeds):
                     # num fil
                     # pdb.set_trace()
                     data1['sylinderNumber'] = int(np.floor(0.01*value[0]*Vol/vol))
+
+            # Set protein number
+            data2['freeNumber'] = int( np.ceil( ydict['protein_ratio']*data1['sylinderNumber']))
 
             # Write yaml file
             with open(yname1, 'w') as yaml_file:
