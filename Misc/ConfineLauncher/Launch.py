@@ -20,7 +20,7 @@ def Launch():
             'qos' : 'condo',
             'partition' : 'shas',
             'account' : 'ucb-summit-smr',
-            'time' : '72:00:00',
+            'time' : '00:30:00',
             # Define architecture of clusters
             'coresPerNode' : 24,
             'socksPerNode' : 2,
@@ -132,7 +132,7 @@ def InitializeDirectories( ydict, grid, nSeeds):
             seedPath = os.path.join( simPath, 's{0}'.format(seed) )
             
             # Copy files to all seed folders
-            dest = copytree( os.getcwd(), seedPath, ignore=ignore_patterns('Launch.py*',parentName, 'sim', 'data'))
+            dest = copytree( os.getcwd(), seedPath, ignore=ignore_patterns('Launch.py*',parentName, '*eq', 'sim', 'data'))
 
             # Add seedPath to collection of seedPaths
             seedPaths += [seedPath]
@@ -160,32 +160,29 @@ def UpdateYamlSim( ydict, grid, simPaths, nSeeds):
             data1 = yaml.load( open( yname1, 'r') )
             data2 = yaml.load( open( yname2, 'r') )
 
-            for key, value in sim.items():
+            # filament length
+            leng = data1['sylinderLength']
+            # Set tube radius 
+            tube_rad = sim['boundary_diameter_tube'][0]
+            data1['boundaries'][0]['radius'] = (leng*tube_rad)/2
 
-                if key == 'boundary_diameter_tube':
-                    # filament length
-                    leng = data1['sylinderLength']
-                    # Set tube radius 
-                    # pdb.set_trace()
-                    data1['boundaries'][0]['radius'] = (leng*value[0])/2
+            # Get volume of system
+            height = data1['simBoxHigh'][2]- data1['simBoxLow'][2]
+            rad = data1['boundaries'][0]['radius']
+            Vol = math.pi * tube_rad**2 * height
+            # Get volume of fil
+            leng = data1['sylinderLength']
+            rad = data1['sylinderDiameter']/2
+            vol = math.pi * rad**2 * leng
 
-                elif key == 'packing_fraction':
-
-                    # Get volume of system
-                    height = data1['simBoxHigh'][2]- data1['simBoxLow'][2]
-                    rad = data1['boundaries'][0]['radius']
-                    Vol = math.pi * rad**2 * height
-                    # Get volume of fil
-                    leng = data1['sylinderLength']
-                    rad = data1['sylinderDiameter']/2
-                    vol = math.pi * rad**2 * leng
-
-                    # num fil
-                    # pdb.set_trace()
-                    data1['sylinderNumber'] = int(np.floor(0.01*value[0]*Vol/vol))
+            # num fil
+            # packing fraction
+            pf = sim['packing_fraction'][0]
+            # pdb.set_trace()
+            data1['sylinderNumber'] = int(np.floor(0.01*pf*Vol/vol))
 
             # Set protein number
-            data2['freeNumber'] = int( np.ceil( ydict['protein_ratio']*data1['sylinderNumber']))
+            data2['proteins'][0]['freeNumber'] = int( np.ceil( ydict['protein_ratio']*data1['sylinderNumber']))
 
             # Write yaml file
             with open(yname1, 'w') as yaml_file:
@@ -263,7 +260,7 @@ export OMP_PLACES=threads
         # How many processors?
         yname1 = os.path.join( spath,'RunConfig.yaml')
         data1 = yaml.load( open( yname1, 'r') )
-        nproc = int(np.ceil(data1['sylinderNumber']/100))
+        nproc = int(np.ceil(data1['sylinderNumber']*0.01))
 
         # numThreads
         num_threads = min([nproc, slurm['coresPerNode']])

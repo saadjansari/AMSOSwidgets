@@ -3,8 +3,8 @@ import pdb
 import glob
 import shutil
 
-path1 = '/Users/saadjansari/Documents/Projects/AMSOSwidgets/Misc/temp_eq'
-path2 = '/Users/saadjansari/Documents/Projects/AMSOSwidgets/Misc/temp_run'
+path1 = '/scratch/summit/saan8193/amsos/Confinement/scan_d_pf/test_eq'
+path2 = '/scratch/summit/saan8193/amsos/Confinement/scan_d_pf/test_run'
 
 def fileKey(f):
     k = int(f[f.rfind("_")+1:f.rfind(".")])
@@ -29,6 +29,5 @@ for spath in sfil:
 
     # Copy files
     print('Copied from {0} to {1}'.format(fil1[-1], os.path.join( cpath, 'TubuleInitial.dat') ))
-    pdb.set_trace()
     shutil.copyfile( fil1[-1], os.path.join( cpath, 'TubuleInitial.dat'))
     shutil.copyfile( fil2[-1], os.path.join( cpath, 'ProteinInitial.dat'))
