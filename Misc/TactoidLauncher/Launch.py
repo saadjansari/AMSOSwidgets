@@ -160,29 +160,14 @@ def UpdateYamlSim( ydict, grid, simPaths, nSeeds):
             data1 = yaml.load( open( yname1, 'r') )
             data2 = yaml.load( open( yname2, 'r') )
 
-            # filament length
-            leng = data1['sylinderLength']
-            # Set tube radius 
-            tube_rad = sim['boundary_diameter_tube'][0]*leng/2
-            data1['boundaries'][0]['radius'] = tube_rad
+            # filament number
+            with open( os.path.join(seedPath, 'TubuleInitial.dat')) as ff:
+                pdb.set_trace()
+                nf = len(ff.readlines())-2
 
-            # Get volume of system
-            height = data1['simBoxHigh'][2]- data1['simBoxLow'][2]
-            rad = data1['boundaries'][0]['radius']
-            Vol = math.pi * tube_rad**2 * height
-            # Get volume of fil
-            leng = data1['sylinderLength']
-            rad = data1['sylinderDiameter']/2
-            vol = math.pi * rad**2 * leng
-
-            # num fil
-            # packing fraction
-            pf = sim['packing_fraction'][0]
-            # pdb.set_trace()
-            data1['sylinderNumber'] = int(np.floor(0.01*pf*Vol/vol))
-
+            pdb.set_trace()
             # Set protein number
-            data2['proteins'][0]['freeNumber'] = int( np.ceil( ydict['protein_ratio']*data1['sylinderNumber']))
+            data2['proteins'][0]['freeNumber'] = int( np.ceil( sim['freeNumber'][0]*nf))
 
             # Write yaml file
             with open(yname1, 'w') as yaml_file:
