@@ -2,6 +2,7 @@ import os, time, yaml, glob, copy
 import math, random, shutil, random
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 
 from pytransform3d import rotations as pyro
 from mpl_toolkits.mplot3d import Axes3D
@@ -33,27 +34,39 @@ def analyzeSim( tpath):
     print('Filaments: {0}\nXlinks: {1}\nFrames: {2}'.format( nF,nP,nT))
 
     # Analysis
-    cct,ftlist_trimmed = getFilamentsInsideCluster( ftlist, ptlist, params, plotting=1)
-    ftlist2,_ = transformCM( ftlist, ptlist, ftlist_trimmed, params)
+    cct,ftlist_trimmed,fdat = getFilamentsInsideCluster( ftlist, ptlist, params, plotting=1)
+    # ftlist2,_ = transformCM( ftlist, ptlist, ftlist_trimmed, params)
 
     # filament centers 
-    c = np.zeros( (nT,nF,3))
-    for it in range(nT):
-        for jf in range(nF):
-            c[it,jf,:] = getMean( ftlist[it][jf].pos0, ftlist[it][jf].pos1, params['boxsize'])
+    # c = np.zeros( (nT,nF,3))
+    # for it in range(nT):
+        # for jf in range(nF):
+            # c[it,jf,:] = getMean( ftlist[it][jf].pos0, ftlist[it][jf].pos1, params['boxsize'])
 
     #Pair-pair separation vs time
-    PPseparation(c,cct, params)
+    # PPseparation(c,cct, params)
 
     # MSD
-    lags = np.arange(1,nT)
-    MSDpairs(lags, c, cct, params)
+    # lags = np.arange(1,nT)
+    # MSDpairs(lags, c, cct, params)
 
     # Nematic Order
-    calcNematicOrder( ftlist, ftlist_trimmed, params)
+    sdat = calcNematicOrder( ftlist, ftlist_trimmed, params)
 
     # Xlink analysis
-    analyzeXlinks( ptlist, ftlist_trimmed, cct, params)
+    num_prot, ratio_prot = analyzeXlinks( ptlist, ftlist_trimmed, cct, params)
+
+    dat = {
+            'S_bulk': sdat['bulk'],
+            'S_cluster': sdat['cluster'],
+            'xlink_num': num_prot,
+            'xlink_ratio': ratio_prot,
+            'actin_num': fdat,
+            'dt': params['dt']*np.arange(nT),
+            'params': params
+            }
+    pickle.dump( dat, open( os.path.join( params['tpath'], "data.pickle"), "wb" ) )
+
 
 # preInit {{{
 @timer
@@ -120,6 +133,7 @@ def preInit(tpath):
     AC = AnalysisBook(boxsize)
 
     params = {
+            'name': os.path.basename(tpath),
             'tpath':tpath,
             'rpath':rpath,
             'analyze_bulk':analyze_bulk,
@@ -205,7 +219,7 @@ def getFilamentsInsideCluster( ftlist, ptlist, params, plotting=0):
 
             # add edges to the graph (each edge represents a binding xlink)
             for p in ptlist[it]:
-                if p.link0 is not -1 and p.link1 is not -1:
+                if p.link0 != -1 and p.link1 != -1:
                     g.addEdge(p.link0, p.link1) 
 
             # find connected components
@@ -233,7 +247,7 @@ def getFilamentsInsideCluster( ftlist, ptlist, params, plotting=0):
         fig.savefig( os.path.join( params['rpath'],'fractionInCluster.pdf') , bbox_inches='tight', dpi=600)
         plt.close('all')
 
-    return cct2,ftlist_trimmed
+    return cct2,ftlist_trimmed, nft
 # }}}
 
 # transformCM {{{
@@ -333,12 +347,12 @@ def calcNematicOrder( ftlist, ftlist_trimmed, params):
     dt = params['dt']
 
     # bulk
-    Sall = []
+    Sall_bulk = []
     for it in range(nT):
-        Sall.append( AC.NematicOrder( ftlist[it]))
+        Sall_bulk.append( AC.NematicOrder( ftlist[it]))
         
     fig,ax = plt.subplots(figsize=(6,6))
-    ax.plot(dt*np.arange(nT), Sall, color=params['cols']['bulk'], linewidth=params['lw'],label='bulk')
+    ax.plot(dt*np.arange(nT), Sall_bulk, color=params['cols']['bulk'], linewidth=params['lw'],label='bulk')
 
     # cluster
     Sall = []
@@ -351,6 +365,13 @@ def calcNematicOrder( ftlist, ftlist_trimmed, params):
     plt.suptitle(params['ftitle'])
     fig.savefig( os.path.join( params['rpath'],'nematicOrder.pdf') , bbox_inches='tight', dpi=600)
     plt.close('all')
+
+    dat = {
+            'bulk': Sall_bulk,
+            'cluster': Sall
+            }
+
+    return dat
 
     # Plot theta evolution with time
     # theta = np.zeros(nT)
@@ -398,52 +419,66 @@ def analyzeXlinks( ptlist, ftlist_trimmed, cct, params):
     plt.close('all')
 
     # Distance
-    restL = 0.05
-    xlinkD = np.zeros((nT))
-    xlinkD_err = np.zeros((nT))
-    for iT in range(nT):
-        com = AC.COM( ftlist_trimmed[iT])
-        vals = [ np.linalg.norm( getDistance( com, xlink.GetCenter(boxsize), boxsize)) for xlink in ptlist[iT]]
-        xlinkD[iT] = np.mean( vals)
-        xlinkD_err[iT] = np.std( vals)
-    fig,ax = plt.subplots(figsize=(6,6))
-    ax.plot(dt*np.arange(nT), xlinkD, color=cols['cluster'], linewidth=lw)
-    ax.fill_between(dt*np.arange(nT), xlinkD - xlinkD_err, xlinkD + xlinkD_err, color=cols['cluster'], alpha=0.1)
-    ax.set(xlabel='time (s)', ylabel='mean distance ($\mu m$)', title='Xlink distance from CM')
-    fig.suptitle(ftitle)
-    fig.savefig( os.path.join(rpath,'xlinkdistance_cm.pdf') , bbox_inches='tight', dpi=600)
-    plt.close('all')
+    # restL = 0.05
+    # xlinkD = np.zeros((nT))
+    # xlinkD_err = np.zeros((nT))
+    # for iT in range(nT):
+        # com = AC.COM( ftlist_trimmed[iT])
+        # vals = [ np.linalg.norm( getDistance( com, xlink.GetCenter(boxsize), boxsize)) for xlink in ptlist[iT]]
+        # xlinkD[iT] = np.mean( vals)
+        # xlinkD_err[iT] = np.std( vals)
+    # fig,ax = plt.subplots(figsize=(6,6))
+    # ax.plot(dt*np.arange(nT), xlinkD, color=cols['cluster'], linewidth=lw)
+    # ax.fill_between(dt*np.arange(nT), xlinkD - xlinkD_err, xlinkD + xlinkD_err, color=cols['cluster'], alpha=0.1)
+    # ax.set(xlabel='time (s)', ylabel='mean distance ($\mu m$)', title='Xlink distance from CM')
+    # fig.suptitle(ftitle)
+    # fig.savefig( os.path.join(rpath,'xlinkdistance_cm.pdf') , bbox_inches='tight', dpi=600)
+    # plt.close('all')
 
     # num xlinks in biggest cluster
     nprot = np.zeros(nT)
+    ratio_prot = np.zeros(nT)
     for it in range(nT):
         idxRods = np.where(cct[it]==True)[0]
         for prot in ptlist[it]:
             if prot.link0 in idxRods or prot.link1 in idxRods:
                 nprot[it]+=1
-        nprot[it] = nprot[it]/np.sum(cct[it])
+        ratio_prot[it] = nprot[it]/np.sum(cct[it])
 
-    fig,ax = plt.subplots(figsize=(6,6))
-    ax.plot(dt*np.arange(nT), nprot, color=cols['cluster'], linewidth=lw)
-    ax.set(xlabel='time (s)', ylabel='ratio', title='Ratio of crosslinks to filaments inside cluster')
+    fig,ax = plt.subplots(2,1,figsize=(6,6))
+    ax[0].plot(dt*np.arange(nT), ratio_prot, color=cols['cluster'], linewidth=lw)
+    ax[0].set(xlabel='time (s)', ylabel='ratio', title='Ratio of crosslinks to filaments inside cluster')
+    ax[1].plot(dt*np.arange(nT), nprot, color=cols['cluster'], linewidth=lw)
+    ax[1].set(xlabel='time (s)', ylabel='count', title='Num filamin inside cluster')
     fig.suptitle(ftitle)
-    fig.savefig( os.path.join(rpath,'xlinkFractionInCluster.pdf') , bbox_inches='tight', dpi=600)
+    fig.savefig( os.path.join(rpath,'xlinkInCluster.pdf') , bbox_inches='tight', dpi=600)
     plt.close('all')
+
+    return nprot, ratio_prot
 
 # }}}
 
 if __name__ == "__main__":
 
     paths = [
-            # "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_f_n400/k_fast/poly/f1", 
-            "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_f_n400/k_fast/poly/f2", 
-            # "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_f_n400/k_fast/poly/f4", 
-            # "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_f_n400/k_fast/poly/f8", 
-            # "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_f_n400/k_fast/poly/f16", 
-            # "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_f_n400/k_fast/mono/f1", 
-            # "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_f_n400/k_fast/mono/f2", 
-            # "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_f_n400/k_fast/mono/f4", 
-            # "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_f_n400/k_fast/mono/f8",
-            # "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_f_n400/k_fast/mono/f16", 
+            "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_filamin/run/filamin1.0/s0", 
+            "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_filamin/run/filamin1.5/s0", 
+            "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_filamin/run/filamin2.0/s0", 
+            "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_filamin/run/filamin2.5/s0", 
+            "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_filamin/run/filamin5/s0", 
+            "/Users/saadjansari/Documents/Projects/AMSOS/resultsSummit/Tactoids/scan_filamin/run/filamin10/s0", 
             ]
     analyzeSims( paths)
+
+
+
+
+
+
+
+
+
+
+
+
+

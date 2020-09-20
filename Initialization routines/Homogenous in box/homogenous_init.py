@@ -22,10 +22,10 @@ import math
 # Initialization -- Define constants for this project
 # =============================================================================
 
-box_size = np.array([2, 2, 2])
+box_size = np.array([3.17, 3.17, 3.17])
 
 # Filament number / packing fraction
-number_of_filaments = 200
+number_of_filaments = 6400
 use_packing_fraction = False
 packing_fraction = 0.05
 
@@ -61,10 +61,10 @@ boundary = {
 #     }
 
 do_file_write = True
-do_visualization = True
+do_visualization = False
 
 # File name to write filament information to
-fname = './TubuleInitial_cond_n200.dat'
+fname = './TubuleInitial_cond_n6400.dat'
 pname = './ProteinInitial.dat'
 
 # Initialize a random number generator

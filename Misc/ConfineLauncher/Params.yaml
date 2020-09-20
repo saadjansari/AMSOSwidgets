@@ -16,7 +16,7 @@ protein_ratio: 3
 # parameters for the run
 parameters:
     packing_fraction:
-        value: [1,2,4,8,16]
+        value: [1,2,4,8,16,32
         label_key: "pf" 
         value_key: ["01", "02", "04", "08", "16"]
 
@@ -24,3 +24,5 @@ parameters:
         value: [1, 1.5, 2.0, 2.5, 3.0]
         label_key: "d" 
         value_key: ["10","15","20","25","30"]
+        vary_height: True
+        heights: [36, 16, 9, 5.76, 4] # in units of sylinder length

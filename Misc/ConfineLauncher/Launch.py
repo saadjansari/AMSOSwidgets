@@ -165,24 +165,50 @@ def UpdateYamlSim( ydict, grid, simPaths, nSeeds):
             # Set tube radius 
             tube_rad = sim['boundary_diameter_tube'][0]*leng/2
             data1['boundaries'][0]['radius'] = tube_rad
+            if ydict['parameters']['boundary_diameter_tube']['vary_height'] is True:
 
-            # Get volume of system
-            height = data1['simBoxHigh'][2]- data1['simBoxLow'][2]
-            rad = data1['boundaries'][0]['radius']
-            Vol = math.pi * tube_rad**2 * height
-            # Get volume of fil
-            leng = data1['sylinderLength']
-            rad = data1['sylinderDiameter']/2
-            vol = math.pi * rad**2 * leng
+                # Get volume of system
+                heights = ydict['parameters']['boundary_diameter_tube']['heights']
+                values = ydict['parameters']['boundary_diameter_tube']['value']
+                height = heights[np.argwhere(sim['boundary_diameter_tube'][0] == np.array(values))[0][0]]*leng
+                data1['simBoxHigh'][2] = data1['simBoxLow'][2]+height
+                data1['initBoxHigh'][2] = data1['initBoxLow'][2]+height
 
-            # num fil
-            # packing fraction
-            pf = sim['packing_fraction'][0]
-            # pdb.set_trace()
-            data1['sylinderNumber'] = int(np.floor(0.01*pf*Vol/vol))
+                rad = data1['boundaries'][0]['radius']
+                Vol = math.pi * tube_rad**2 * height
+                # Get volume of fil
+                leng = data1['sylinderLength']
+                rad = data1['sylinderDiameter']/2
+                vol = math.pi * rad**2 * leng
 
-            # Set protein number
-            data2['proteins'][0]['freeNumber'] = int( np.ceil( ydict['protein_ratio']*data1['sylinderNumber']))
+                # num fil
+                # packing fraction
+                pf = sim['packing_fraction'][0]
+                # pdb.set_trace()
+                data1['sylinderNumber'] = int(np.floor(0.01*pf*Vol/vol))
+
+                # Set protein number
+                data2['proteins'][0]['freeNumber'] = int( np.ceil( ydict['protein_ratio']*data1['sylinderNumber']))
+
+            else:
+
+                # Get volume of system
+                height = data1['simBoxHigh'][2]- data1['simBoxLow'][2]
+                rad = data1['boundaries'][0]['radius']
+                Vol = math.pi * tube_rad**2 * height
+                # Get volume of fil
+                leng = data1['sylinderLength']
+                rad = data1['sylinderDiameter']/2
+                vol = math.pi * rad**2 * leng
+
+                # num fil
+                # packing fraction
+                pf = sim['packing_fraction'][0]
+                # pdb.set_trace()
+                data1['sylinderNumber'] = int(np.floor(0.01*pf*Vol/vol))
+
+                # Set protein number
+                data2['proteins'][0]['freeNumber'] = int( np.ceil( ydict['protein_ratio']*data1['sylinderNumber']))
 
             # Write yaml file
             with open(yname1, 'w') as yaml_file:
