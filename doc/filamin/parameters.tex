@@ -1,0 +1,171 @@
+\documentclass{article}[12pt]
+\usepackage[margin=0.5in]{geometry}
+\usepackage{tabularx, amsmath}
+
+\title{Actin-tactoid parameters}	
+
+\begin{document}
+\maketitle
+
+\section{Volume of a tactoid}
+
+Here we find the volume of a tactoid given a length $L$, a diameter $d$ and an aspect ratio $\Lambda = L/d$. We assume that a tactoid can be approximated by an ellipsoid, then the volume of a tactoid is
+\begin{align*}
+V_T &\approx \frac{4}{3}\pi .\frac{L}{2}. \frac{d}{2} .\frac{d}{2} = \frac{4\pi}{24}.L . \frac{L^2}{\Lambda^2}
+\end{align*}
+\begin{equation}
+V_T \approx \frac{\pi L^3}{6 \Lambda^2} \label{eq:vol}
+\end{equation}
+\\
+For $L=1\mu m$, $\Lambda = 2.4$, we find that $V_T = 0.091 \mu m^3$.\\
+For $L=2\mu m$, $\Lambda = 2.4$, we find that $V_T = 0.727 \mu m^3$.\\
+\\
+
+\section{Packing fraction of filaments}
+
+The volume of a single filament of length $L_f$, a diameter $d_f$ is given by:
+\begin{equation*}
+V_{filament} = \frac{1}{4}\pi d_f^2 L_f
+\end{equation*}
+Then, the volume of $N_f$ filaments is given by:
+
+\begin{equation}
+V_{filaments} = \frac{1}{4}\pi d_f^2 L_f N_f
+\end{equation}
+The packing fraction $\phi$ is defined by:
+\begin{equation}
+\phi = \frac{V_{filaments}}{V_T} =  \frac{1}{4}\pi d_f^2 L_f N_f \frac{6 \Lambda^2}{\pi L^3} = \frac{3 \Lambda^2 d_f^2 L_f N_f}{2L^3}
+\end{equation}
+\\
+
+\section{Number of actin filaments}
+
+In experiments, we usually measure a molar concentration $c$ in units of $M (mol/litre)$. This can be represented in terms of the number of molecules by:
+\begin{align*}
+c = \frac{\text{number of moles}}{\text{volume}} &= \frac{N_{molecules}}{N_A V}
+\end{align*} 
+where $N_A = 6.022$ x $10^{23} mol^{-1}$ is the Avagadro number. In experiments, the molar concentration of actin monomers was approximated to be $c = 250 \mu M = 0.25 mol m^{-3}$ \cite{weirich2017liquid}. The number of molecules in a tactoid of volume $V$ \eqref{eq:vol} is given by:
+\begin{equation}
+N_{molecules} = c . N_A. V = (1.51 \text{ x } 10^{23} m^{-3}) \frac{\pi L^3}{6 \Lambda^2} \label{eq:num_monomeric_actin}
+\end{equation}
+
+We can also find the number of filaments $N_f$ since we know the length of a filament $L_f$, and the size of a molecule $L_{molecule}$ (in this case monomeric actin $\approx 2.7 nm$ \cite{weirich2017liquid}).
+\begin{equation*}
+N_f = \frac{N_{molecules}}{\text{Number of molecules in a filament}} = \frac{N_{molecules}}{L_f / L_{molecule}} = \frac{N_{molecules} L_{molecule}}{L_f}
+\end{equation*}
+\begin{equation}
+N_f = (2.13 \text{ x } 10^{14} m^{-2}) \frac{L^3}{\Lambda^2 L_f} \label{eq:num_filament}
+\end{equation}
+\\
+For $L_f = 180 nm$,  $L=1\mu m$, $\Lambda = 2.4$, we find that $N_f =205$. This corresponds to a packing fraction $\phi = 0.0156 (1.56 \%)$.\\
+For $L_f = 180 nm$,  $L=2\mu m$, $\Lambda = 2.4$, we find that $N_f = 1,640$. This corresponds to a packing fraction $\phi = 0.0156 (1.56 \%)$. \\
+\\
+
+\section{Number of filamin molecules}
+
+Experiments have observed actin tactoids for filamin concentration $c_{filamin} = 2\% - 16 \% c_{actin}$ \cite{weirich2017liquid}. Choosing the filamin concentration as $10\%$
+\begin{align*}
+c_{filamin} = 0.1 c_{monomeric-actin}\\
+N_{filamin} = 0.1 N_{monomeric-actin}
+\end{align*}
+Plugging in the number of actin monomer molecules \eqref{eq:num_monomeric_actin}, we find that:
+\begin{equation}
+N_{filamin} = (7.91 \text{ x } 10^{21} m^{-3}) \frac{L^3}{\Lambda^2}
+\end{equation}
+\\
+For $L=1\mu m$, $\Lambda = 2.4$, we find that $N_{filamin} = 1,375$.\\
+For $L=2\mu m$, $\Lambda = 2.4$, we find that $N_{filamin} = 11,000$.\\
+
+\newpage
+\section{Filamin parameters} 
+\vspace{0.5cm}
+\begin{tabularx}{\textwidth}{| X | c| c | c| X |} % <-- Alignments: 1st column left, 2nd middle and 3rd right, with vertical lines in between
+	\hline
+	\textbf{Quantity} & \textbf{Symbol} & \textbf{Value} & \textbf{Range} & \textbf{Notes}\\
+	\hline
+	 Free length & $l_0$ & $125$nm  & $100$-$150$nm & \cite{weirich2017liquid}, comm. with Kim Weirich\\
+	 Spring constant & $\kappa$ & $0.05pN/nm$  & $0.02$-$0.1 pN/nm$ & comm. with Kim Weirich\\
+	 Diffusion constant (singly-bound) & $D_{sb}$ & $0 \mu m^2 s^{-1}$ & - & comm. with Kim Weirich \\
+	 Diffusion constant (doubly-bound) & $D_{db}$ & $0 \mu m^2 s^{-1}$ & - & comm. with Kim Weirich \\
+	 Diffusion constant (free) & $D_{free}$ & $1.0 \mu m^2 s^{-1}$ & - &  \\
+	 Unbinding load sensitivity & $\lambda$ & $0.5$ & - & chosen to tune energy dependence on binding and unbinding  \\
+	 Parallel to antiparallel ratio & $P_{aff}$ & $1.0$ & - &  \\
+	 Capture radius & $r_c$ & $0.078 \mu m$ & - &  $(D+l_0)/2$\\
+	 Association constant & $K_a$ & $3.22 \mu M^{-1} $ & - & \cite{nakamura2007structural} \\
+	 Association constant & $K_e / V_B$ & $0.662$ & - &  notes (\ref{sec:rate_kinetics})\\
+	 Turnover rate (doubly to singly) & $k_{o,d}$ & $0.305 s^{-1}$ & - &  notes (\ref{sec:rate_kinetics})\\
+	 Turnover rate (singly to unabound) & $k_{o,s}$ & $0.305 s^{-1}$ & - &  notes (\ref{sec:rate_kinetics})\\
+	 \hline
+\end{tabularx}
+\vspace{0.5cm}
+\section{Derivation of rate kinetics} \label{sec:rate_kinetics}
+
+Most experiments measure off rates and association constants for single-stage binding of crosslinks to filaments, i.e. the crosslinks go from unbound to doubly-bound in a single step. To derive rate kinetics for a two-stage binding model, we need to consider both models and match them to get the desired rate constants. 
+
+\subsection{One-stage model}
+We start with the one-stage binding model:
+
+\begin{equation}
+	\frac{d\psi}{dt} = \epsilon^2 c_0 k_{on} - k_{off} \psi \label{eq:1}
+\end{equation}
+where $\psi$ is the doubly-bound crosslinker density, $\epsilon$ is the site density per filament, $c_0$ is the unbound crosslinker concentration, and $k_{on}$ and $k_{off}$ are on and off rates between unbound and doubly-bound states (in units of $\mu M^{-1} s^{-1}$ and $s^{-1}$). From experiement, we know that $k_{on} = 1.3 \mu M ^{-1} s^{-1}$ and $k_{off} = 0.71 s^{-1}$ \cite{goldmann1993analysis}. We note that at steady-state:
+\begin{align*}
+	\frac{d\psi}{dt} &= 0\\
+	\epsilon^2 c_0 k_{on} - k_{off} \psi &= 0\\
+	\psi &= \epsilon^2 c_0 \frac{k_{on}}{k_{off}} = \epsilon^2 c_0 K
+\end{align*}
+where $K$ is an association constant.\\
+	
+\subsection{Two-stage model}
+In the two-stage model, crosslinkers first go from unbound to singly-bound:
+
+\begin{equation}
+\frac{d\chi_i}{dt} = \epsilon c_0 k_{on,s} - k_{off,s} \chi_i \label{eq:2}
+\end{equation}
+where $\chi_i$ is the singly-bound crosslinker density on filament $i$, and $k_{on,s}$ and $k_{off,s}$ are on and off rates between unbound and singly-bound states. At steady-state, this reduces to:
+\begin{align*}
+	\frac{d\chi_i}{dt} &= 0\\
+	\epsilon c_0 k_{on,s} - k_{off,s} \chi_i &= 0
+\end{align*}
+\begin{equation}
+		\chi_i= \epsilon c_0 \frac{k_{on,s}}{k_{off,s}} = \epsilon c_0 K_a \label{eq:3}
+\end{equation}
+where $K_a$ is an assocation constant. It was measured to be $K_a = 3.22 \mu M^{-1}$ \cite{nakamura2007structural}.
+\\
+\\
+Once singly-bound, crosslinkers can bind to a second filament to reach the doubly-bound state.
+\begin{equation}
+\frac{d\psi}{dt} = \frac{\epsilon k_{on,d}}{V_B}(\chi_i + \chi_j) - 2 k_{off,d} \psi \label{eq:4}
+\end{equation}
+where $V_B$ is a binding volume that a crosslinker can bind to a second filament when it is singly-bound, and $k_{on,d}$ and $k_{off,d}$ are on and off rates between singly and doubly-bound states. The associated equilibrium constant is $K_e = k_{on,d}/k_{off,d}$. Plugging in the steady-state solution from unbound to singly-bound \eqref{eq:3}, we get:
+\begin{equation}
+\frac{d\psi}{dt} = \epsilon^2 c_0 \frac{2  K_a k_{on,d}}{V_B} - 2 k_{off,d} \psi \label{eq:5}
+\end{equation}
+
+\subsection{Matching the models}
+Matching the coefficients of \eqref{eq:1} and \eqref{eq:5}:
+\begin{align*}
+	k_{on} = \frac{2  K_a k_{on,d}}{V_B} && k_{off,d} = \frac{k_{off}}{2}\\
+	k_{on,d} = \frac{k_{on} V_B}{2K_a} && k_{off,d} = 0.305 s^{-1}\\
+	\frac{k_{on,d}}{k_{off,d}} = \frac{k_{on} V_B}{2K_a k_{off,d}}  &&\\
+	K_e = 0.662 V_B &&\\
+	\frac{K_e}{V_B} = 0.662 &&
+\end{align*}
+
+In our software, we can set the value of $K_e / V_B$, so we don't need to derive $V_B$. The only constant left is the off rate from singly-bound to unbound. Assuming the structure of the first head of filamin doesnt change upon unbinding the second head, a good guess would be $k_{off,s} = k_{off,d} = k_{off}/2 = 0.305 s^{-1}$. All the constants for the two-stage model are then given by:
+\begin{align*}
+	K_a = 3.22 \mu M^{-1} \\
+	K_e/V_B = 0.662\\
+	k_{off,s} = 0.305 s^{-1}\\
+	k_{off,d} = 0.305 s^{-1}
+\end{align*}
+\\
+
+
+
+\medskip
+
+\bibliographystyle{unsrt}
+\bibliography{parameters}
+
+\end{document}
