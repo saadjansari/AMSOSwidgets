@@ -1,0 +1,20 @@
+# value: 
+#   a list of numbers specifying exact values 
+# 
+# value_key:
+#   tags to use, as replacement, for values in the creation of parameter tags
+#
+# label_key:
+#   a key to use in the creation of the parameter tags for use in file names.
+#   E.g. if value_key: [1,2,3], and label_key: "xyz". Then, the parameter tags are "xyz1", "xyz2", and "xyz3"
+#
+# Parameters for RunLauncher
+seeds: 1 # number of seeds for each sim
+dir_name: 'eq'
+
+# parameters for the run
+parameters:
+    freeNumber:
+        value: [0.7, 1.05, 1.4, 1.75, 3.5, 7] # scaled by sylinder number
+        label_key: "filamin" 
+        value_key: ["1.0","1.5","2.0","2.5","5","10"]

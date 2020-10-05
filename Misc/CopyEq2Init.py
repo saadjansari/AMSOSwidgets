@@ -3,8 +3,8 @@ import pdb
 import glob
 import shutil
 
-path1 = '/scratch/summit/saan8193/amsos/Confinement/scan_d_pf/test_eq'
-path2 = '/scratch/summit/saan8193/amsos/Confinement/scan_d_pf/test_run'
+path1 = os.path.join( os.getcwd(), 'eq')
+path1 = os.path.join( os.getcwd(), 'run')
 
 def fileKey(f):
     k = int(f[f.rfind("_")+1:f.rfind(".")])
@@ -12,11 +12,7 @@ def fileKey(f):
 
 # eq/run folder has specific sim directories, which have seed directories
 # look in those seed directories
-sim_seed_ext = '*/*'
-if sim_seed_ext is not None:
-    sfil = glob.glob( os.path.join(path1, '*/*'))
-else:
-    sfil = [path1]
+sfil = glob.glob( os.path.join(path1, '*/*'))
 for spath in sfil:
 
     fil1 = glob.glob( os.path.join(spath, 'result/result*/SylinderAscii_*.dat'))
