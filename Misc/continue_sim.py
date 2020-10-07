@@ -16,12 +16,12 @@ print('Sim being continued: {}\n'.format(fpath) )
 newpath = fpath + '_c' 
 
 # Copy all files/folders except the 'result' folder to the newpath
-dest = copytree( fpath, newpath, ignore=ignore_patterns('result')
+dest = copytree( fpath, newpath, ignore=ignore_patterns('result','*.log', '*.err'))
         
 # create result folder and copy few files from old resutl folder except actual results
 rpath_old = os.path.join( fpath, 'result')
 rpath_new = os.path.join( newpath, 'result')
-dest = copytree( rpath_old, rpath_new, ignore=ignore_patterns('result*')
+dest = copytree( rpath_old, rpath_new, ignore=ignore_patterns('result*'))
 
 # copy last data files from old sim folder to use an intial files for new sim
 # define a key finder
@@ -35,8 +35,8 @@ fil1 = sorted(fil1, key=fileKey)
 fil2 = sorted(fil2, key=fileKey)
 
 # Copy files
-shutil.copyfile( fil1[-1], os.path.join( newpath, 'TubuleInitial.dat'))
-shutil.copyfile( fil2[-1], os.path.join( newpath, 'ProteinInitial.dat'))
+copyfile( fil1[-1], os.path.join( newpath, 'TubuleInitial.dat'))
+copyfile( fil2[-1], os.path.join( newpath, 'ProteinInitial.dat'))
 print('Set up initial .dat files')
 
 # Launch sim
