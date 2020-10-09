@@ -83,21 +83,26 @@ def analyze(opts):
 
     # Prompt user for relative path to folder containing sims
     prompt = '\nSpecify relative path to run folder with simulation folders: '
-    relpath = input(prompt)  # get path from user
-    fpath = os.path.abspath(relpath)
-    if not os.path.exists(fpath):
+    relpath = Path(input(prompt))  # get path from user
+    fpath = Path(relpath).resolve()
+    if not fpath.exists():
         raise Exception('specified path does not exist')
     print('Run path: {}\n'.format(fpath))
 
-    # get sim folders
-    spaths1 = glob.glob(os.path.join(relpath, '*/*/result')
-                        )  # folders that have seed folders
-    # folders that do not have sim folders
-    spaths2 = glob.glob(os.path.join(relpath, '*/result'))
-    spaths = ['/'.join(ii.split('/')[:-1])
-              for ii in spaths1 + spaths2]  # sim seed paths
-    snames = ['__'.join(ii.split('/')[-3:-1]) for ii in spaths1] + \
-        [ii.split('/')[-2] for ii in spaths2]  # sim names to use as labels
+    # get sim folders (folders with result dirs) recursively using ** notation
+    spaths = [res_path.parent for res_path in relpath.glob('**/result')]
+    snames = ['__'.join(path.name.split('/')) for path in spaths]
+    print(snames)
+
+    # TODO if behavior is different, we might want to pu this back in
+    # spaths1 = glob.glob(os.path.join(relpath, '*/*/result')
+    #                     )  # folders that have seed folders
+    # # folders that do not have sim folders
+    # spaths2 = glob.glob(os.path.join(relpath, '*/result'))
+    # spaths = ['/'.join(ii.split('/')[:-1])
+    #           for ii in spaths1 + spaths2]  # sim seed paths
+    # snames = ['__'.join(ii.split('/')[-3:-1]) for ii in spaths1] + \
+    #     [ii.split('/')[-2] for ii in spaths2]  # sim names to use as labels
 
     # For each sim, analyze it
     for idx in range(len(spaths)):
