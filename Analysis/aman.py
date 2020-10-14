@@ -3,7 +3,6 @@
 from pathlib import Path
 import os
 import argparse
-import glob
 
 from sim import Sim
 
