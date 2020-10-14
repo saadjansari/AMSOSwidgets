@@ -20,19 +20,23 @@ rng = np.random.default_rng()  # initialize generator instance
 
 def parseArgs():
 
-    parser = argparse.ArgumentParser(prog='aman.py')
+    parser = argparse.ArgumentParser(prog='init_filaments.py')
+    parser.add_argument("input", default=None,
+                        help="File with initialization parameters.")
     parser.add_argument(
         '-T',
         '--tactoid',
         action='store_true',
         default=False,
-        help='use tactoid options for analysis')
+        help='Generate nematic tactoid initial conditions.')
     parser.add_argument(
-        '-C',
-        '--confine',
+        '-I',
+        '--isotropic',
         action='store_true',
         default=False,
-        help='use confinement options for analysis')
+        help='Generate isotropic initial conditions. Overlaps may occur.')
+    opts = parser.parse_args()
+    return opts
 
 
 class Filament():
@@ -224,14 +228,6 @@ def getRand3PointInSphere(rad):
         d = np.linalg.norm(xyz)
     return [xyz[0], xyz[1], xyz[2]]
 
-#    radius = np.random.uniform(0.0,1.0)*rad
-#    theta = np.random.uniform(-1.0,1.0)*math.pi
-#    phi = np.arccos(1-2*np.random.uniform(0.0,1.))
-#    x = radius * np.sin( theta ) * np.cos( phi )
-#    y = radius * np.sin( theta ) * np.sin( phi )
-#    z = radius * np.cos( theta )
-#    return [x,y,z]
-
 
 def attemptAddFilament(center, L, director, D, f_list, gid):
     # Initialize a  filament of length L
@@ -309,19 +305,51 @@ def generate_nematic_sphere(fil_diam=.007, Lmean=0.18, Lmin=.09, Lmax=.028,
     return f_list
 
 
-def main(yml_file):
+def generate_isotropic_cube(fil_diam=.007, Lmean=0.18, Lmin=.09, Lmax=.028,
+                            side_length=.64,
+                            n_fil=2000,
+                            use_pack_frac=False,
+                            use_exp_filament_length=True,
+                            **kwargs):
+    """TODO: Docstring for generate_isotropic_cube.
+
+    @param fil_diam TODO
+    @param Lmean TODO
+    @return: TODO
+
+    """
+    f_list = []  # list to store filaments
+    if use_exp_filament_length:
+        lens = sorted([getLengthRandomExp(rng, Lmean, Lmin, Lmax)
+                       for i in range(n_fil)], reverse=True)
+    else:
+        lens = [Lmean] * n_fil
+
+    for idx, el in enumerate(lens):
+        center = rng.uniform(0, side_length, 3)
+        director = rng.uniform(0, 1, 3)
+        director /= np.linalg.norm(director)
+        f_list += [Filament(center, director, el, .5 * fil_diam, idx)]
+
+    return f_list
+
+
+def main():
     """TODO: Docstring for main.
 
     @param yml_file TODO
     @return: TODO
 
     """
-    with open(yml_file, 'r') as yf:
+    opts = parseArgs()
+    with open(opts.input, 'r') as yf:
         p_dict = yaml.safe_load(yf)
 
     generate_nematic_sphere(**p_dict)
 
+    generate_isotropic_cube(**p_dict)
+
 
 ##########################################
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main()
