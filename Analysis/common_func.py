@@ -35,6 +35,18 @@ def calc_mean_pbc(p0,p1,boxsize):
     return (p0 + p1)/2
 
 @njit
+def unfold_coordinates(crds,boxsize):
+    # unfolded crds via the nearest image convention
+
+    # reference coordinate
+    c_ref = crds[0,:]
+    dist = np.absolute( crds-c_ref)
+    for idx in np.arange(crds.shape[-1]):
+        k = np.floor( dist[:,idx]/(0.4*boxsize[idx]))
+        crds[:,idx] -= k*boxsize[idx]
+    return crds
+
+@njit
 def calc_mean_separation(coords,boxsize):
     # Calculate mean pair-pair separation
 
@@ -130,3 +142,4 @@ def msd_pairs(lags,c,nT,nF,boxsize,boolRodsInside):
         mu[idx] = np.mean(pptdiff)
         sig[idx] = np.std(pptdiff)
     return mu,sig
+
