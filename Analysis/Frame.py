@@ -98,7 +98,8 @@ class Frame():
 
         if self.opts.analyze_local_order:
             self.data['local_polar_order'] = calc_local_polar_order( 
-                    np.array( df_sylinder.pos1.tolist() ), 
+                    c, 
+                    np.array( df_sylinder.orientation.tolist() ), 
                     self.opts.boxsize)
 
         # Length distribution inside vs outside cluster
@@ -111,6 +112,3 @@ class Frame():
             self.data['length_mean_cluster'] = np.mean(len_fils[ cc_bool] )
             self.data['length_mean_env'] = np.mean(len_fils[ np.invert(cc_bool)] )
 
-
-
-            

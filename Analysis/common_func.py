@@ -146,3 +146,21 @@ def msd_pairs(lags,c,nT,nF,boxsize,boolRodsInside):
         sig[idx] = np.std(pptdiff)
     return mu,sig
 
+@njit
+def pair_partition_func_centers(centers):
+
+    q = np.zeros((centers.shape[0], centers.shape[0]))
+    # for each pair of centers, calculate pair_partition function
+    for idx1 in np.arange( centers.shape[0]):
+        q[idx1,:] = pair_partition_func_i_centers(
+            centers[idx1,:], centers, q[idx1,:])
+    return q
+
+@njit
+def pair_partition_func_i_centers(r0,r1,q):
+
+    # distance between centers
+    dist = r0-r1
+    for idx in np.arange( dist.shape[1]):
+        q+= dist[:,idx]**2
+    return q

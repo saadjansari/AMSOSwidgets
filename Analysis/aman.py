@@ -48,6 +48,7 @@ def parseArgs():
     if opts.tactoid:
         opts.analyze_cluster = True
         opts.analyze_global_order = True
+        opts.analyze_local_order = True
         opts.analyze_xlinks = True
         opts.analyze_pairpair_separation = False
         opts.analyze_aspect_ratio = True
@@ -57,6 +58,7 @@ def parseArgs():
     elif opts.confine:
         opts.analyze_cluster = True
         opts.analyze_global_order = True
+        opts.analyze_local_order = True
         opts.analyze_xlinks = False
         opts.analyze_pairpair_separation = False
         opts.analyze_aspect_ratio = False
