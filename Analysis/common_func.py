@@ -50,6 +50,9 @@ def unfold_coordinates(crds,boxsize):
 def calc_mean_separation(coords,boxsize):
     # Calculate mean pair-pair separation
 
+    if not coords or coords.shape[0] < 2:
+        return np.nan
+
     # Initialize
     num_coords = coords.shape[0]
     mu = 0 

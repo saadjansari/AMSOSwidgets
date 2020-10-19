@@ -12,7 +12,6 @@ from calc_protein import *
 
 # A class to handle a single time frame in AMSOS
 
-
 class Frame():
     def __init__(self, file_sylinder, file_protein, opts):
 
@@ -97,9 +96,10 @@ class Frame():
             self.data['z_order'] = calc_z_ordering(
                 np.array(df_sylinder.orientation.tolist()))
 
-        # if self.opts.analyze_local_order:
-            # self.data['local_polar_order'] = calc_local_polar_order( np.array( df_sylinder.pos1.tolist() ), 
-                    # self.opts.boxsize)
+        if self.opts.analyze_local_order:
+            self.data['local_polar_order'] = calc_local_polar_order( 
+                    np.array( df_sylinder.pos1.tolist() ), 
+                    self.opts.boxsize)
 
         # Length distribution inside vs outside cluster
         if self.opts.length_distribution:

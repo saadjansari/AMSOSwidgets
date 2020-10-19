@@ -5,6 +5,9 @@ from common_func import *
 @njit
 def calc_protein_energy( lengths, rest_length):
 
+    if not lengths:
+        return np.nan, np.nan
+
     # Energy
     sum_energy = 0
     for ix in np.arange( len(lengths) ):
