@@ -3,6 +3,7 @@
 import os
 import argparse
 import glob
+import pdb
 
 from sim import *
 
@@ -30,6 +31,7 @@ def parseArgs():
         opts.analyze_pairpair_separation = False
         opts.analyze_aspect_ratio = True
         opts.analyze_z_ordering = False
+        opts.length_distribution = False
 
     elif opts.confine:
         opts.analyze_cluster = True
@@ -38,6 +40,7 @@ def parseArgs():
         opts.analyze_pairpair_separation = False
         opts.analyze_aspect_ratio = False
         opts.analyze_z_ordering = True
+        opts.length_distribution = False
 
     if opts.tactoid and opts.confine:
         raise Exception('Cannot specify both tactoid and confinement opts')
@@ -73,6 +76,16 @@ def analyze(opts):
     spaths2 = glob.glob( os.path.join( relpath, '*/result')) # folders that do not have sim folders
     spaths = ['/'.join( ii.split('/')[:-1]) for ii in spaths1+spaths2] # sim seed paths
     snames = [ '__'.join( ii.split('/')[-3:-1]) for ii in spaths1] + [ ii.split('/')[-2] for ii in spaths2] # sim names to use as labels
+    spaths = [
+            # "/Users/saadjansari/Documents/Projects/Results/AMSOS/Tactoids/scan_filamin_6400/run/f1",
+            # "/Users/saadjansari/Documents/Projects/Results/AMSOS/Tactoids/scan_filamin_6400/run/f1_5",
+            # "/Users/saadjansari/Documents/Projects/Results/AMSOS/Tactoids/scan_filamin_6400/run/f2",
+            "/Users/saadjansari/Documents/Projects/Results/AMSOS/Tactoids/scan_filamin_6400/run/f2_5_merged",
+            "/Users/saadjansari/Documents/Projects/Results/AMSOS/Tactoids/scan_filamin_6400/run/f5_merged",
+            "/Users/saadjansari/Documents/Projects/Results/AMSOS/Tactoids/scan_filamin_6400/run/f10_merged",
+            ]
+    snames = [ ii.split('/')[-1] for ii in spaths] # sim names to use as labels
+    pdb.set_trace()
 
     # For each sim, analyze it
     for idx in range( len(spaths) ):
