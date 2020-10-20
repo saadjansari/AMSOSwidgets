@@ -1,0 +1,11 @@
+# Test file for initialization routine
+fil_diam: .007
+Lmean: 0.18
+Lmin: 0.09
+Lmax: 0.28
+n_fil: 6400
+side_length: 3.16
+system_offset: 0.0
+use_pack_frac: False
+use_exp_filament_length: True
+
