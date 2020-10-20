@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 import math
 import argparse
 from numba import jit
-rng = np.random.default_rng()  # initialize generator instance
 # %matplotlib notebook
 
 
@@ -180,9 +179,16 @@ def check_fil_overlap(fil, fil_list, min_dist_bound):
 
 def getLengthRandomExp(rng, Lmean, Lmin=0, Lmax=1e6):
     # Define a random length sampler
+    if Lmin >= Lmax:
+        raise ValueError("Lmax must be greater than Lmin.")
     val = -1
+    i = 0
     while val < Lmin or val > Lmax:
         val = rng.exponential(Lmean)
+        i += 1
+        if i > 5000:
+            raise RuntimeError("Taking too long to find random number. "
+                               "Try increasing difference between Lmin and Lmax.")
     return val
 
 
@@ -318,6 +324,7 @@ def generate_isotropic_cube(fil_diam=.007, Lmean=0.18, Lmin=.09, Lmax=.028,
     @return: TODO
 
     """
+    rng = np.random.default_rng()  # initialize generator instance
     f_list = []  # list to store filaments
     if use_exp_filament_length:
         lens = sorted([getLengthRandomExp(rng, Lmean, Lmin, Lmax)
@@ -345,9 +352,27 @@ def main():
     with open(opts.input, 'r') as yf:
         p_dict = yaml.safe_load(yf)
 
-    generate_nematic_sphere(**p_dict)
+    if opts.tactoid:
+        print(":::Making nematic tactiod initial conditions:::")
+        fil_list = generate_nematic_sphere(**p_dict)
 
-    generate_isotropic_cube(**p_dict)
+    elif opts.isotropic:
+        print(":::Making isotropic initial conditions:::")
+        fil_list = generate_isotropic_cube(**p_dict)
+    else:
+        print("Must select type of initial conditions to generate.")
+        return
+
+    # first offset system
+    fname = p_dict.get('out_file_name', 'TubuleInitial.dat')
+    with open(fname, 'w') as filer:
+        filer.write('# Initial configuration of rods\n#\n')
+        system_offset = np.asarray(p_dict.get('system_offset', [0, 0, 0]))
+        for fil in fil_list:
+            fil.pos_start += np.array(system_offset)
+            fil.pos_end += np.array(system_offset)
+            fil.center += np.array(system_offset)
+            filer.write(fil.GetStringtoWrite())
 
 
 ##########################################
