@@ -104,8 +104,8 @@ def analyze(opts):
     #     [ii.split('/')[-2] for ii in spaths2]  # sim names to use as labels
 
     # For each sim, analyze it
-    for idx in range(len(spaths)):
-        sim = Sim(spaths[idx], snames[idx], opts)
+    for spath, sname in zip(spaths, snames):
+        sim = Sim(spath, sname, opts)
         sim.analyze()
 
 

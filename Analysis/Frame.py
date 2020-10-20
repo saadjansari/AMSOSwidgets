@@ -5,10 +5,12 @@ import pandas as pd
 from decorators import timer
 from read_ascii_dat import read_dat_sylinder, read_dat_protein
 from connected_components import get_largest_cc, get_edges_in_largest_cc
-from calc_global_order import *
-from common_func import *
+from calc_global_order import (calc_nematic_order, calc_polar_order,
+                               calc_z_ordering)
+from common_func import (calc_mean_pbc, calc_mean_separation,
+                         calc_distance_pbc)
 from calc_tactoid_shape import calc_aspect_ratio
-from calc_protein import *
+from calc_protein import calc_protein_energy
 
 # A class to handle a single time frame in AMSOS
 
