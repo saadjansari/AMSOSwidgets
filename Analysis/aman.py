@@ -9,7 +9,7 @@ from sim import Sim
 
 '''
 Name: aman.py
-Description: AMSOSAnalysis performs frame-by-frame analysis sequentially on simulations
+Description: aman ( am(sos) an(alysis) ) performs frame-by-frame analysis sequentially on simulations
 Input: To see type aman.py -h
 '''
 
@@ -50,6 +50,7 @@ def parseArgs():
         opts.analyze_pairpair_separation = False
         opts.analyze_aspect_ratio = True
         opts.analyze_z_ordering = False
+        opts.length_distribution = False
 
     elif opts.confine:
         opts.analyze_cluster = True
@@ -58,6 +59,7 @@ def parseArgs():
         opts.analyze_pairpair_separation = False
         opts.analyze_aspect_ratio = False
         opts.analyze_z_ordering = True
+        opts.length_distribution = False
 
     if opts.tactoid and opts.confine:
         raise Exception('Cannot specify both tactoid and confinement opts')
@@ -92,16 +94,6 @@ def analyze(opts):
     spaths = [res_path.parent for res_path in relpath.glob('**/result')]
     snames = ['__'.join(path.name.split('/')) for path in spaths]
     print(snames)
-
-    # TODO if behavior is different, we might want to pu this back in
-    # spaths1 = glob.glob(os.path.join(relpath, '*/*/result')
-    #                     )  # folders that have seed folders
-    # # folders that do not have sim folders
-    # spaths2 = glob.glob(os.path.join(relpath, '*/result'))
-    # spaths = ['/'.join(ii.split('/')[:-1])
-    #           for ii in spaths1 + spaths2]  # sim seed paths
-    # snames = ['__'.join(ii.split('/')[-3:-1]) for ii in spaths1] + \
-    #     [ii.split('/')[-2] for ii in spaths2]  # sim names to use as labels
 
     # For each sim, analyze it
     for spath, sname in zip(spaths, snames):

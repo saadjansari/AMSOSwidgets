@@ -23,9 +23,6 @@ def transform_coords( coords, origin_new, axis_new):
         axis_angle = np.concatenate( (vperp, -np.array([theta]) ))
         q = pyro.quaternion_from_axis_angle( axis_angle)
 
-        # check quaternion to ensure its valid
-        q = pyro.check_quaternion(q)
-
         # transfrom coordinates 
         coords = q_prod_coords( coords )
 
