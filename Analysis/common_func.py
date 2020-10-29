@@ -35,16 +35,16 @@ def calc_mean_pbc(p0,p1,boxsize):
     return (p0 + p1)/2
 
 @njit
-def unfold_coordinates(crds,boxsize):
+def unfold_coordinates(crds,c_ref,boxsize):
     # unfolded crds via the nearest image convention
 
     # reference coordinate
-    c_ref = crds[0,:]
-    dist = np.absolute( crds-c_ref)
+    dist = crds-c_ref
     for idx in np.arange(crds.shape[-1]):
-        k = np.floor( dist[:,idx]/(0.4*boxsize[idx]))
+        k = np.sign( dist[:,idx]) * np.floor( np.absolute(dist[:,idx])/(0.5*boxsize[idx]))
         crds[:,idx] -= k*boxsize[idx]
     return crds
+
 
 @njit
 def calc_mean_separation(coords,boxsize):
@@ -75,7 +75,7 @@ def calc_mean_p2p_dist(coords, boxsize):
     mean_p2p = np.zeros( num_coords)
 
     # Calculate p2p distance matrix
-    p2p_mat = calc_p2p_dist_mat(coords, boxsize)
+    p2p_mat = pair_partition_func_centers(coords, boxsize)
     for idx in np.arange( num_coords):
         for idx2 in np.arange(num_coords):
             mean_p2p[idx] += p2p_mat[idx,idx2]
@@ -147,20 +147,20 @@ def msd_pairs(lags,c,nT,nF,boxsize,boolRodsInside):
     return mu,sig
 
 @njit
-def pair_partition_func_centers(centers):
-
+def pair_partition_func_centers(centers, boxsize):
+    
     q = np.zeros((centers.shape[0], centers.shape[0]))
     # for each pair of centers, calculate pair_partition function
     for idx1 in np.arange( centers.shape[0]):
-        q[idx1,:] = pair_partition_func_i_centers(
-            centers[idx1,:], centers, q[idx1,:])
-    return q
+        q[idx1,:] = pair_partition_func_i_centers( 
+            centers[idx1,:], centers, q[idx1,:], boxsize)
+    return np.sqrt(q)
 
 @njit
-def pair_partition_func_i_centers(r0,r1,q):
-
+def pair_partition_func_i_centers(r0,r1,q, boxsize):
+    
     # distance between centers
-    dist = r0-r1
+    dist = calc_distance_pbc(r0, r1, boxsize)
     for idx in np.arange( dist.shape[1]):
         q+= dist[:,idx]**2
     return q

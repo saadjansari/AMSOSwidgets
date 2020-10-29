@@ -4,7 +4,7 @@ from numba import njit
 def calc_nematic_order(orient_array):
     # Calculates the maximum eigenvalue of the nematic tensor Q
 
-    if not orient_array:
+    if not orient_array.any():
         return np.nan
 
     # calculate Q tensor
@@ -16,7 +16,7 @@ def calc_nematic_order(orient_array):
 def calc_polar_order(orient_array):
     # Calculates the polar order given the array of filament orientations
 
-    if not orient_array:
+    if not orient_array.any():
         return np.nan
 
     # Initialize P vector
@@ -48,7 +48,7 @@ def calc_nematic_tensor( orient_array):
 def calc_z_ordering( orient_array):
     # Calculate alignment in z
 
-    if not orient_array:
+    if not orient_array.any():
         return np.nan
 
     z_axis = np.array( [0.,0.,1.])

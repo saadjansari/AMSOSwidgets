@@ -6,11 +6,14 @@ from common_func import *
 def calc_local_polar_order( c, orients, boxsize):
     # Calculate the local polar order
 
+    if not orients.any():
+        return np.nan, np.nan
+
     porder_par = 0
     porder_apar = 0
 
     # coordinate indices within the distance range
-    q = pair_partition_func_centers(c)
+    q = pair_partition_func_centers(c, boxsize)
 
     for idx in np.arange( q.shape[0]):
 
@@ -35,6 +38,5 @@ def calc_local_polar_order( c, orients, boxsize):
             porder_par += np.linalg.norm( o_parallel/n_parallel)
         if n_aparallel > 0:
             porder_apar += np.linalg.norm( o_aparallel/n_aparallel)
-        pdb.set_trace()
 
     return porder_par/c.shape[0], porder_apar/c.shape[0]

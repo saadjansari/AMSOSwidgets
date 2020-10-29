@@ -5,7 +5,7 @@ from common_func import *
 @njit
 def calc_protein_energy( lengths, rest_length):
 
-    if not lengths:
+    if not lengths.any():
         return np.nan, np.nan
 
     # Energy
