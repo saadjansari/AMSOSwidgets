@@ -1,0 +1,4 @@
+We should think about making each one of these initial configurations its own
+directory with the parameter files used to create the TubuleInitial and
+ProteinInitial files. This way we do not worry about using the improper
+boundary conditions or protein config files.

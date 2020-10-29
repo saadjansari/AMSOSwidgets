@@ -3,8 +3,6 @@
 from pathlib import Path
 import os
 import argparse
-import glob
-import pdb
 
 from sim import Sim
 
@@ -110,8 +108,8 @@ def analyze(opts):
         snames = ['__'.join(path.name.split('/')) for path in spaths]
 
     # For each sim, analyze it
-    for idx in range(len(spaths)):
-        sim = Sim(spaths[idx], snames[idx], opts)
+    for spath, sname in zip(spaths, snames):
+        sim = Sim(spath, sname, opts)
         sim.analyze()
 
 

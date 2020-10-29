@@ -5,11 +5,13 @@ import pandas as pd
 from decorators import timer
 from read_ascii_dat import read_dat_sylinder, read_dat_protein
 from connected_components import get_nodes_in_clusters, get_edges_in_largest_cc
-from calc_global_order import *
+from calc_global_order import (calc_nematic_order, calc_polar_order,
+                               calc_z_ordering)
+from common_func import (calc_mean_pbc, calc_mean_separation,
+                         calc_distance_pbc, unfold_coordinates)
 from calc_local_order import *
-from common_func import *
 from calc_tactoid_shape import calc_aspect_ratio
-from calc_protein import *
+from calc_protein import calc_protein_energy
 
 # A class to handle a single time frame in AMSOS
 
@@ -41,11 +43,11 @@ class Frame():
         # Check existence of a cluster
         if self.opts.analyze_cluster:
             # Get largest connected component using information about xlinks
-            cc, cc_bool = get_nodes_in_clusters( 
-                    df_sylinder.gid.tolist(), 
-                    df_protein.link0.tolist(), 
-                    df_protein.link1.tolist(),
-                    min_size_ratio=0.1)
+            cc, cc_bool = get_nodes_in_clusters(
+                df_sylinder.gid.tolist(),
+                df_protein.link0.tolist(),
+                df_protein.link1.tolist(),
+                min_size_ratio=0.1)
             df_sylinder_cc = df_sylinder[cc_bool]
             self.data['num_cluster'] = len(df_sylinder_cc)
         else:
@@ -108,11 +110,11 @@ class Frame():
 
         # Length distribution inside vs outside cluster
         if self.opts.length_distribution:
-            len_fils = calc_distance_pbc( 
-                    np.array( df_sylinder.pos0.tolist()),
-                    np.array( df_sylinder.pos1.tolist()),
-                    self.opts.boxsize)
+            len_fils = calc_distance_pbc(
+                np.array(df_sylinder.pos0.tolist()),
+                np.array(df_sylinder.pos1.tolist()),
+                self.opts.boxsize)
             self.data['length_mean_bulk'] = np.mean(len_fils)
-            self.data['length_mean_cluster'] = np.mean(len_fils[ cc_bool] )
-            self.data['length_mean_env'] = np.mean(len_fils[ np.invert(cc_bool)] )
-
+            self.data['length_mean_cluster'] = np.mean(len_fils[cc_bool])
+            self.data['length_mean_env'] = np.mean(
+                len_fils[np.invert(cc_bool)])
