@@ -8,23 +8,49 @@ Description:
 """
 
 from pathlib import Path
-from matplotlib.animation import FFMpegWriter
 from time import time
-from mpl_toolkits import mplot3d  # for vizualization
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from matplotlib.animation import FuncAnimation
-from scipy import special
+from matplotlib.animation import FuncAnimation, FFMpegWriter
 import math
 import yaml
-from copy import deepcopy
-from numba import jit, njit, vectorize
+from numba import jit, vectorize
+import argparse
 
 rng = np.random.default_rng()  # initialize generator instance
 
 SQRT2 = np.sqrt(2)
+
+
+def parse_args():
+
+    parser = argparse.ArgumentParser(prog='gen_fluor_movies.py')
+    parser.add_argument('-i', "--input", default=None,
+                        help="Image parameter yaml file")
+    opts = parser.parse_args()
+
+    if opts.input is None:
+        opts.params = {
+            'sigmaxy': np.float_(.02),
+            'A': np.float_(10.0),
+            'bkglevel': np.float_(0.0),
+            'noisestd': np.float_(0.0),
+            'pixelsize': np.float_(.03067),
+            'graph_frac': np.float_(.1),
+            'n_graph': 10,
+            'fps': 10,
+        }
+    else:
+        param_path = Path(opts.input)
+        if not param_path.exists():
+            raise IOError(
+                " {} does not exist. Put in valid path.".format(param_path))
+
+        with param_path.open('r') as pf:
+            opts.params = yaml.safe_load(pf)
+
+    return opts
 
 
 @vectorize(nopython=True)
@@ -145,49 +171,48 @@ def animate(i, ax, X, Y, frames, vmax):
     return [pcm]
 
 
-##########################################
-if __name__ == "__main__":
-    image_params = {
-        'sigmaxy': np.float_(.007),
-        'A': np.float_(10.0),
-        'bkglevel': np.float_(0.0),
-        'noisestd': np.float_(0.0),
-        'pixelsize': np.float_(.01067),
-        'graph_frac': np.float_(.1),
-    }
+def main(opts):
 
-    with open('TestConfig.yaml', 'r') as yf:
+    with open('../RunConfig.yaml', 'r') as yf:
         run_params = yaml.safe_load(yf)
 
     sim_box = np.asarray(run_params['simBoxHigh'])
 
-    result_dir = Path("./test_results/")
-    fil_dat_paths = sorted(result_dir.glob("SylinderAscii*.dat"),
+    result_dir = Path(".")
+    fil_dat_paths = sorted(result_dir.glob("**/SylinderAscii*.dat"),
                            key=get_file_number)
 
     rng = np.random.default_rng()
     nfils = count_fils(fil_dat_paths[0])
 
-    fil_idx_arr = rng.choice(nfils, int(nfils * image_params['graph_frac']))
-    print("Total filaments: {}, filaments graphed: {} ({}%)".format(nfils, int(
-        nfils * image_params['graph_frac']), image_params['graph_frac'] * 100))
+    fil_idx_arr = rng.choice(nfils, int(nfils * opts.params['graph_frac']))
+    print("Total filaments: {}, filaments graphed: {} ({}%)".format(
+        nfils, int(nfils * opts.params['graph_frac']),
+        opts.params['graph_frac'] * 100))
 
     print(len(fil_idx_arr))
 
-    X, Y, _ = make_image_bkg(sim_box, image_params)
+    X, Y, _ = make_image_bkg(sim_box, opts.params)
 
     frames = []
-    for i, fdp in enumerate(fil_dat_paths[::3]):
+    for i, fdp in enumerate(fil_dat_paths[::10]):
         t0 = time()
         frames += [create_fluor_frame(fdp,
                                       fil_idx_arr,
                                       run_params,
-                                      image_params)]
+                                      opts.params)]
         print("Frame {} created in: {:.2g} sec".format(i, time() - t0))
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_aspect('equal')
     ani = FuncAnimation(fig, animate, len(frames),
-                        fargs=(ax, X, Y, frames, 5. * image_params['A']),
-                        blit=True)
+                        fargs=(
+        ax, X, Y, frames, opts.params['A'] / opts.params['graph_frac']),
+        blit=True)
     writer = FFMpegWriter(fps=10, bitrate=1800)
-    ani.save("test_video.mp4", writer=writer)
+    ani.save("fluor_vid.mp4", writer=writer)
+
+
+##########################################
+if __name__ == "__main__":
+    opts = parse_args()
+    main(opts)
