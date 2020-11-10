@@ -18,7 +18,6 @@ from numba import jit
 
 
 def parseArgs():
-
     parser = argparse.ArgumentParser(prog='init_filaments.py')
     parser.add_argument("input", default=None,
                         help="File with initialization parameters.")
@@ -226,7 +225,7 @@ def getFilamentLengthInsideSphere(f1, rad):
     return (num_in / 100) * f1.length
 
 
-def getRand3PointInSphere(rad):
+def getRand3PointInSphere(rng, rad):
     # Get random 3d cartesian point() inside sphere
     d = 2 * rad
     while d > rad:
@@ -263,13 +262,14 @@ def generate_nematic_sphere(fil_diam=.007, Lmean=0.18, Lmin=.09, Lmax=.028,
     gid = 0
     f_list = []  # list to store filaments
     vol_sphere = (4. / 3.) * math.pi * (sphere_radius**3)
+    rng = np.random.default_rng()  # initialize generator instance
     if use_pack_frac:
 
         v_enclosed = 0  # volume occupied by filaments inside the sphere
         cpf = 0  # current packing fraction tracker
         while cpf < kwargs['pack_frac']:
             # Sample a random (x,y,z inside a sphere)
-            center = getRand3PointInSphere(sphere_radius)
+            center = getRand3PointInSphere(rng, sphere_radius)
 
             if use_exp_filament_length:
                 L = getLengthRandomExp(rng, Lmean, Lmin, Lmax)
@@ -301,7 +301,7 @@ def generate_nematic_sphere(fil_diam=.007, Lmean=0.18, Lmin=.09, Lmax=.028,
             while not status:
                 failCount += 1
                 # Sample a random (x,y,z inside a sphere)
-                center = getRand3PointInSphere(sphere_radius)
+                center = getRand3PointInSphere(rng, sphere_radius)
                 f_list, gid, status = attemptAddFilament(
                     center, el, director, fil_diam, f_list, gid)
                 if failCount > 5000:
