@@ -217,7 +217,7 @@ if __name__ == "__main__":
 
     # Alternate
     sim_sub_paths = [
-        Path("/mnt/home/alamson/projects/DATA/AMSOS_Methods/20-10-14_iso_5.03um_nfil25600_nxl5.7pc"),
-        Path("/mnt/home/alamson/projects/DATA/AMSOS_Methods/20-10-14_iso_5.03um_nfil25600_nxl5.7pc_cont"),
+        Path("/mnt/home/alamson/projects/DATA/AMSOS_Methods/20-10-14_iso_6.34um_nfil51200_nxl5.7pc_merge"),
+        Path("/mnt/home/alamson/projects/DATA/AMSOS_Methods/20-10-14_iso_6.34um_nfil51200_nxl5.7pc_cont2"),
     ]
     merge_single_sim(sim_sub_paths)

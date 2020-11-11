@@ -249,7 +249,7 @@ def attemptAddFilament(center, L, director, D, f_list, gid):
 
 
 def generate_nematic_sphere(fil_diam=.007, Lmean=0.18, Lmin=.09, Lmax=.028,
-                            director=[1., 0., 0.],
+                            director=[0., 0., 1.],
                             sphere_radius=.64,
                             n_fil=2000,
                             use_pack_frac=False,
