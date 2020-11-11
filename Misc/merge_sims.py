@@ -191,7 +191,6 @@ def sort_sim_names(s):
 
 
 if __name__ == "__main__":
-    
     # # Get all sim folders
     # # Prompt user for relative path to folder containing sims
     # prompt = '\nSpecify relative path to run folder with simulation folders: '

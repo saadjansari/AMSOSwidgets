@@ -1,0 +1,13 @@
+# Test file for initialization routine
+fil_diam: .007
+Lmean: 0.18
+Lmin: 0.09
+Lmax: 0.28
+n_fil: 12800
+sphere_radius: .508
+side_length: 3.99
+system_offset: 1.995
+director: [0,0,1]
+use_pack_frac: False
+use_exp_filament_length: True
+
