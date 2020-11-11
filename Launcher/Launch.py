@@ -343,27 +343,41 @@ def create_confinement_config( sim, ydict, data1, data2):
 
     return data1,data2
 
-def create_tactoid_config( sim, ydict, data1, data2):
+def create_tactoid_config( sim, ydict, data_rc, data_pc):
+    # data_rc is data from RunConfig.yaml file
+    # data_pc is data from ProteinConfig file
 
     # Parameters in Param.yaml and what they vary
     # filamin_conc: concentration of filamin xlinker in percentage of actin concentration (10% represents 7 xlinkers per 1 actin filament)
 
-    # Set tube radius 
     if 'filamin_conc' in sim.keys():
         fc = sim['filamin_conc'][0]
 
         # num xlinkers
-        n_actin = data1['sylinderNumber']
+        n_actin = data_rc['sylinderNumber']
         n_xlink = fc*0.7*n_actin
 
         # calculate how many fixed xlinks and how many free
         num_fixed = int( n_xlink // n_actin )
         num_free = int( n_xlink % n_actin )
         
-        data2['proteins'][0]['freeNumber'] = num_free
-        data2['proteins'][0]['fixedLocationPerMT'] = [2 for ii in range(num_fixed)]
+        data_pc['proteins'][0]['freeNumber'] = num_free
+        data_pc['proteins'][0]['fixedLocationPerMT'] = [2 for ii in range(num_fixed)]
 
-    return data1,data2
+    if 'filamin_ratio' in sim.keys():
+        fc = int( sim['filamin_ratio'][0] )
+        num_fixed = int( fc )
+        data_pc['proteins'][0]['fixedLocationPerMT'] = [2 for ii in range(num_fixed)]
+
+    if 'filamin_len' in sim.keys():
+        fl = sim['filamin_len'][0]
+        data_pc['proteins'][0]['freeLength'] = fl
+        
+    if 'filamin_Ka' in sim.keys():
+        ka = sim['filamin_Ka'][0]
+        data_pc['proteins'][0]['Ka'] = ka 
+
+    return data_rc,data_pc
 
 def fileKey(f):
     k = int(f[f.rfind("_")+1:f.rfind(".")])

@@ -41,7 +41,7 @@ def unfold_coordinates(crds,c_ref,boxsize):
     # reference coordinate
     dist = crds-c_ref
     for idx in np.arange(crds.shape[-1]):
-        k = np.sign( dist[:,idx]) * np.floor( np.absolute(dist[:,idx])/(0.5*boxsize[idx]))
+        k = np.sign( dist[:,idx]) * np.floor( np.absolute(dist[:,idx])/(0.51*boxsize[idx]))
         crds[:,idx] -= k*boxsize[idx]
     return crds
 

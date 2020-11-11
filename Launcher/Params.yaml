@@ -9,15 +9,15 @@
 #   E.g. if value_key: [1,2,3], and label_key: "xyz". Then, the parameter tags are "xyz1", "xyz2", and "xyz3"
 #
 # Parameters for RunLauncher
-regime: 'Tactoid' # Tactoid or Confinement
+regime: 'Tactoid' # Tactoid or Confinement 
 #dir_name: 'eq' #optional
-seeds: 1 # number of seeds for each sim
+seeds: 3 # number of seeds for each sim
 
 conf_params:
-    protein_ratio: 3
+    #protein_ratio: 3
 
 tact_params:
-    nada: 0
+    #nada: 0
 
 # parameters for the run
 parameters:
@@ -33,7 +33,22 @@ parameters:
         #vary_height: True
         #heights: [36, 16, 9, 5.76, 4] # in units of sylinder length
 
-    filamin_conc:
-        value: [1,1.5,2,2.5,5,10,15]
-        label_key: "f" 
-        value_key: ["010", "015", "020", "025", "050","100","150"]
+    #filamin_conc:
+        #value: [1,1.5,2,2.5,5,10,15]
+        #label_key: "f" 
+        #value_key: ["010", "015", "020", "025", "050","100","150"]
+
+    filamin_ratio:
+        value: [1,2,4,7]
+        label_key: "fR" 
+        value_key: ["1", "2", "4", "7"]
+        
+    filamin_len:
+        value: [0.05, 0.1, 0.15]
+        label_key: "fL" 
+        value_key: ["05", "10", "15"]
+        
+    filamin_Ka:
+        value: [ [0.322,0.322], [1.61,1.61], [3.22,3.22] ]
+        label_key: "Ka" 
+        value_key: ["0332", "1610", "3220"]

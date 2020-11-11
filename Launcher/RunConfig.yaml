@@ -2,11 +2,11 @@
 rngSeed: 1234
 # simulation box
 simBoxLow: [0.0, 0.0, 0.0]
-simBoxHigh: [10.0, 10.0, 10.0]
+simBoxHigh: [4.0, 4.0, 4.0]
 simBoxPBC: [false, false, true]
 # initialization box
 initBoxLow: [0.0, 0.0, 0.0]
-initBoxHigh: [10.0, 10.0, 10.0]
+initBoxHigh: [4.0, 4.0, 4.0]
 # initialization inside a circle along X direction
 initCircularX: false
 # components < -1  or > 1 will be randomly set
@@ -17,7 +17,7 @@ KBT: 0.00411 #pN.um, 300K
 linkKappa: 1000.0
 # sylinder
 sylinderFixed: false
-sylinderNumber: 4000
+sylinderNumber: 12800
 sylinderLength: 0.5 # um
 sylinderLengthSigma: 0 # logNormal distribution
 sylinderDiameter: 0.025 # um
@@ -25,16 +25,10 @@ sylinderColBuf: 1.0 #
 sylinderDiameterColRatio: 1.0
 sylinderLengthColRatio: 1.0
 # timestepping
-dt: 0.0001 # s
-timeTotal: 500.0 # s
+dt: 0.00001 # s
+timeTotal: 10.0 # s
 timeSnap: 0.01 # s
 # LCP Solver
 conResTol: 1e-5
 conMaxIte: 10000
 conSolverChoice: 0
-boundaries:
-  - type: "tube"
-    center: [5, 5, 5]
-    radius: 4
-    axis: [0, 0, 1]
-    inside: true

@@ -5,9 +5,9 @@ proteins:
     PtoAPratio: 1.
     fixedEnd0: false
     #properties:
-    freeLength: 0.053 # um
+    freeLength: 0.05 # um
     rc: 0.039 # um, (D/2 + \ell_0)/2
-    kappa: 300.0 # pN/um
+    kappa: 50.0 # pN/um
     fstall: 5.0 # pN
     lambda: 0.25822 # dimensionless
     diffUnbound: 1.0 # um^2/s
@@ -22,5 +22,5 @@ proteins:
     Ke: [90.9, 90.9] # dimensionless, used in S<->D
     ko_d: [0.11, 0.11] # 1/s, off-rate
     # numbers:
-    freeNumber: 8000
+    freeNumber: 0
     fixedLocationPerMT: # given in [-1,1]. otherwise random

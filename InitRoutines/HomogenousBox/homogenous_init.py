@@ -22,10 +22,11 @@ import math
 # Initialization -- Define constants for this project
 # =============================================================================
 
-box_size = np.array([3.17, 3.17, 3.17])
+# box_size = np.array([3.17, 3.17, 3.17])
+box_size = np.array([4,4,4])
 
 # Filament number / packing fraction
-number_of_filaments = 6400
+number_of_filaments = 11800
 use_packing_fraction = False
 packing_fraction = 0.05
 

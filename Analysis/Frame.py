@@ -119,7 +119,7 @@ class Frame():
                 np.array(df_sylinder.pos0.tolist()),
                 np.array(df_sylinder.pos1.tolist()),
                 self.opts.boxsize)
-            len_fils = np.sqrt( np.sum( len_fils**2, axis=1))
+            len_fils = np.sqrt( np.sum( dist_xyz**2, axis=1))
             self.data['length_mean_bulk'] = np.mean(len_fils)
             self.data['length_mean_cluster'] = np.mean(len_fils[cc_bool])
             self.data['length_mean_env'] = np.mean(
