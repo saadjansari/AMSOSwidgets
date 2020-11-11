@@ -36,25 +36,34 @@ def parseArgs():
         default=False,
         help='make graphs for sims')
     parser.add_argument(
+        '-O',
         '--overwrite',
         action='store_true',
         default=False,
         help='overwrite feather files')
+    parser.add_argument(
+        '--sim', 
+        action='append', 
+        dest='sim_names',
+        default=[],
+        help='Specific sims to run analysis on. Appends to the list')
     opts = parser.parse_args()
 
     # Specify analysis options
     if opts.tactoid:
         opts.analyze_cluster = True
         opts.analyze_global_order = True
+        opts.analyze_local_order = False 
         opts.analyze_xlinks = True
         opts.analyze_pairpair_separation = False
         opts.analyze_aspect_ratio = True
         opts.analyze_z_ordering = False
-        opts.length_distribution = False
+        opts.length_distribution = True 
 
     elif opts.confine:
         opts.analyze_cluster = True
         opts.analyze_global_order = True
+        opts.analyze_local_order = True
         opts.analyze_xlinks = False
         opts.analyze_pairpair_separation = False
         opts.analyze_aspect_ratio = False
@@ -90,10 +99,13 @@ def analyze(opts):
         raise Exception('specified path does not exist')
     print('Run path: {}\n'.format(fpath))
 
-    # get sim folders (folders with result dirs) recursively using ** notation
-    spaths = [res_path.parent for res_path in relpath.glob('**/result')]
-    snames = ['__'.join(path.name.split('/')) for path in spaths]
-    print(snames)
+    if opts.sim_names:
+        spaths = [ relpath / ii for ii in opts.sim_names]
+        snames = opts.sim_names
+    else:
+        # get sim folders (folders with result dirs) recursively using ** notation
+        spaths = [res_path.parent for res_path in relpath.glob('**/result')]
+        snames = ['__'.join(path.name.split('/')) for path in spaths]
 
     # For each sim, analyze it
     for spath, sname in zip(spaths, snames):

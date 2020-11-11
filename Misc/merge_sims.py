@@ -192,32 +192,38 @@ def sort_sim_names(s):
 
 if __name__ == "__main__":
 
-    # # Get all sim folders
-    # # Prompt user for relative path to folder containing sims
-    # prompt = '\nSpecify relative path to run folder with simulation folders: '
-    # relpath = input(prompt) # get path from user
-    # fpath = os.path.abspath( relpath)
-    # if not os.path.exists( fpath):
-    # raise Exception('specified path does not exist')
-    # print('Run path: {}\n'.format(fpath) )
+    # Get all sim folders
+    # Prompt user for relative path to folder containing sims
+    prompt = '\nSpecify relative path to run folder with simulation folders: '
+    relpath = input(prompt)  # get path from user
+    fpath = os.path.abspath(relpath)
+    if not os.path.exists(fpath):
+        raise Exception('specified path does not exist')
+    print('Run path: {}\n'.format(fpath))
 
-    # # get sim folders
-    # spaths = glob.glob( os.path.join( relpath, '*'))
-    # # for each sim folder, look for sub-directories
-    # for spath in spaths:
-    # sim_sub_paths = glob.glob( os.path.join( spath, '*') )
+    # get sim folders
+    spaths = glob.glob(os.path.join(relpath, '*'))
+    # for each sim folder, look for sub-directories
+    for spath in spaths:
+        sim_sub_paths = glob.glob(os.path.join(spath, '*'))
 
-    # # remove merge sub-directory if it exists
-    # sim_sub_paths = [ii for ii in sim_sub_paths if ii.split('/')[-1] != 'merge']
-    # sim_sub_paths = sorted(sim_sub_paths, key=sort_sim_names)
+        # remove merge sub-directory if it exists
+        sim_sub_paths = [
+            ii for ii in sim_sub_paths if ii.split('/')[-1] != 'merge']
+        sim_sub_paths = sorted(sim_sub_paths, key=sort_sim_names)
 
-    # # merge these dirs
-    # if len(sim_sub_paths) != 1:
-    # merge_single_sim( sim_sub_paths)
+        # merge these dirs
+        if len(sim_sub_paths) != 1:
+            merge_single_sim(sim_sub_paths)
 
     # Alternate
-    sim_sub_paths = [
-        Path("/mnt/home/alamson/projects/DATA/AMSOS_Methods/20-10-14_iso_6.34um_nfil51200_nxl5.7pc_merge"),
-        Path("/mnt/home/alamson/projects/DATA/AMSOS_Methods/20-10-14_iso_6.34um_nfil51200_nxl5.7pc_cont2"),
-    ]
-    merge_single_sim(sim_sub_paths)
+    # sim_sub_paths = [
+            # "/Users/saadjansari/Documents/Projects/Results/AMSOS/Tactoids/n25600/run",
+            # "/Users/saadjansari/Documents/Projects/Results/AMSOS/Tactoids/n25600/run_c",
+            # "/Users/saadjansari/Documents/Projects/Results/AMSOS/Tactoids/n25600/run_c_c",
+            # ]
+    # sim_sub_paths = [
+        # Path("/mnt/home/alamson/projects/DATA/AMSOS_Methods/20-10-14_iso_5.03um_nfil25600_nxl5.7pc"),
+        # Path("/mnt/home/alamson/projects/DATA/AMSOS_Methods/20-10-14_iso_5.03um_nfil25600_nxl5.7pc_cont"),
+    # ]
+    # merge_single_sim(sim_sub_paths)

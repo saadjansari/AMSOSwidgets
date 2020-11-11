@@ -1,61 +1,42 @@
 import numpy as np
 from numba import njit
-
-def calcLocalPolarOrder( c, boxsize):
-
-    dist_max = 4*0.025
-
-    dist_within = within_range(c,nF,dist_max, boxsize)
-    porder_par = []
-    porder_apar = []
-    for ifil in range(nF):
-        # fils_neatest = ftlist[it][ np.argwhere( dist_within[ifil,:]).transpose()[0].tolist()]
-        fils_nearest = list( compress( , dist_within[ifil,:].tolist()))
-        if not fils_nearest:
-            continue
-            orient_ref = ftlist[it][ifil].GetOrientation( boxsize)
-            orientList_par = []
-            orientList_apar = []
-            for fil in fils_nearest:
-                orient_new = fil.GetOrientation( boxsize)
-                if orient_ref.dot( orient_new) / (1*1) >= 0:
-                    orientList_par.append( orient_new)
-                else:
-                    orientList_apar.append( orient_new)
-            PList_par = np.array(orientList_par)
-            PList_apar = np.array(orientList_apar)
-            if PList_par.any():
-                porder_par.append(np.linalg.norm( np.mean(PList_par, axis=0)) )
-            if PList_apar.any():
-                porder_apar.append(np.linalg.norm( np.mean(PList_apar, axis=0)) )
-        if porder_par:
-            Porder_par[:,it] = [np.mean( porder_par), np.std(porder_par)]
-        if porder_apar:
-            Porder_apar[:,it] = [np.mean( porder_apar), np.std(porder_apar)]
-
-    return Porder_par, Porder_apar, Porder_par_cluster, Porder_apar_cluster
-
-# }}}
+from common_func import *
 
 @njit
-def within_range(c,nF,dist_max,boxsize):
-    # Calculate mean pair-pair filament distances for all filaments
-    p2p = np.zeros((nF,nF))
-    for jf in range(nF):
-        dist = np.absolute( c[jf,:]-c)
-        # get distance to all other filaments
-        for jf2 in range(nF):
-            if jf==jf2:
-               p2p[jf,jf2] = 100*dist_max
-               p2p[jf2,jf] = 100*dist_max
-            elif p2p[jf2,jf] == 0:
-                res2=0
-                # get distance
-                for idx in range(3):
-                    k = np.floor( dist[jf2,idx]/(0.5*boxsize[idx]))
-                    dist[jf2,idx] -= k*boxsize[idx]
-                    res2 += dist[jf2,idx]**2
-                p2p[jf,jf2] = np.sqrt(res2)
+def calc_local_polar_order( c, orients, boxsize):
+    # Calculate the local polar order
+
+    if not orients.any():
+        return np.nan, np.nan
+
+    porder_par = 0
+    porder_apar = 0
+
+    # coordinate indices within the distance range
+    q = pair_partition_func_centers(c, boxsize)
+
+    for idx in np.arange( q.shape[0]):
+
+        o_parallel = np.zeros(3)
+        o_aparallel = np.zeros(3)
+        n_parallel = 0
+        n_aparallel = 0
+
+        # orientation of reference filament
+        o1 = orients[idx,:]
+        dp = np.dot(orients, o1)
+        scaled_orients = np.multiply( orients.transpose(), q[idx,:]).transpose()
+        for idx1 in np.arange(q.shape[1]):
+            if dp[idx1] >0:
+                o_parallel += scaled_orients[idx1,:]
+                n_parallel += 1
             else:
-                p2p[jf,jf2] =p2p[jf2,jf]
-    return (p2p < dist_max)
+                o_aparallel += scaled_orients[idx1,:]
+                n_aparallel += 1
+
+        if n_parallel > 0:
+            porder_par += np.linalg.norm( o_parallel/n_parallel)
+        if n_aparallel > 0:
+            porder_apar += np.linalg.norm( o_aparallel/n_aparallel)
+
+    return porder_par/c.shape[0], porder_apar/c.shape[0]

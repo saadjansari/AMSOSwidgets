@@ -17,15 +17,21 @@ sdirs = [ os.path.join( ii, 's0') for ii in sims]
 save_names = ['/Users/saadjansari/Desktop/conf_snaps/'+ii+'.png' for ii in snames]
 # simdir = '/Users/saadjansari/Documents/Projects/Results/AMSOS/Confinement/scan_d_pf_const_num/run/pf01_d125/s0'
 
+def sort_sim_names(s):
+    return len(s.split('/')[-1].split('_c'))
+
+
 print('Configuration: Confine')
 
 for sname,simpath,save_name in zip(snames, sims, save_names):
 
-    try:
+    simdirs = glob.glob( os.path.join(simpath,'*')) 
+    if os.path.join(simpath, 'merge') in simdirs:
         simdir = os.path.join(simpath, 'merge') 
         os.chdir( simdir)
-    except:
-        simdir = os.path.join(simpath, 's0') 
+    else:
+        simdirs = sorted( simdirs, key=sort_sim_names)
+        simdir = simdirs[-1]
         os.chdir( simdir)
 
     print('Parsing {}'.format(sname) )

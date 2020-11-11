@@ -9,11 +9,11 @@ from calc_global_order import (calc_nematic_order, calc_polar_order,
                                calc_z_ordering)
 from common_func import (calc_mean_pbc, calc_mean_separation,
                          calc_distance_pbc, unfold_coordinates)
+from calc_local_order import *
 from calc_tactoid_shape import calc_aspect_ratio
 from calc_protein import calc_protein_energy
 
 # A class to handle a single time frame in AMSOS
-
 
 class Frame():
     def __init__(self, file_sylinder, file_protein, opts):
@@ -92,23 +92,34 @@ class Frame():
                 calc_protein_energy(xlink_lengths, 0.05))
 
         if self.opts.analyze_aspect_ratio:
-            self.data['tactoid_aspect_ratio'] = calc_aspect_ratio(
-                unfold_coordinates(c[cc, :], self.opts.boxsize))
+            ends_cc = np.vstack( (
+                np.array( df_sylinder.pos0.tolist())[cc,:], 
+                np.array( df_sylinder.pos1.tolist())[cc,:]))
+            # unfold coordinates
+            if np.any( ends_cc):
+                ends_cc_unfolded = unfold_coordinates( 
+                        ends_cc, ends_cc[0,:], self.opts.boxsize)
+            else:
+                ends_cc_unfolded = ends_cc
+            self.data['tactoid_aspect_ratio'] = calc_aspect_ratio( ends_cc_unfolded)
 
         if self.opts.analyze_z_ordering:
             self.data['z_order'] = calc_z_ordering(
                 np.array(df_sylinder.orientation.tolist()))
 
-        # if self.opts.analyze_local_order:
-            # self.data['local_polar_order'] = calc_local_polar_order( np.array( df_sylinder.pos1.tolist() ),
-            # self.opts.boxsize)
+        if self.opts.analyze_local_order:
+            self.data['local_polar_order'] = list( calc_local_polar_order( 
+                    c, 
+                    np.array( df_sylinder.orientation.tolist() ), 
+                    self.opts.boxsize) )
 
         # Length distribution inside vs outside cluster
         if self.opts.length_distribution:
-            len_fils = calc_distance_pbc(
+            dist_xyz = calc_distance_pbc(
                 np.array(df_sylinder.pos0.tolist()),
                 np.array(df_sylinder.pos1.tolist()),
                 self.opts.boxsize)
+            len_fils = np.sqrt( np.sum( len_fils**2, axis=1))
             self.data['length_mean_bulk'] = np.mean(len_fils)
             self.data['length_mean_cluster'] = np.mean(len_fils[cc_bool])
             self.data['length_mean_env'] = np.mean(
