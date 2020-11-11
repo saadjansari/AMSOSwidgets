@@ -191,29 +191,30 @@ def sort_sim_names(s):
 
 
 if __name__ == "__main__":
-    
+
     # Get all sim folders
     # Prompt user for relative path to folder containing sims
     prompt = '\nSpecify relative path to run folder with simulation folders: '
-    relpath = input(prompt) # get path from user
-    fpath = os.path.abspath( relpath)
-    if not os.path.exists( fpath):
+    relpath = input(prompt)  # get path from user
+    fpath = os.path.abspath(relpath)
+    if not os.path.exists(fpath):
         raise Exception('specified path does not exist')
-    print('Run path: {}\n'.format(fpath) )
+    print('Run path: {}\n'.format(fpath))
 
     # get sim folders
-    spaths = glob.glob( os.path.join( relpath, '*')) 
+    spaths = glob.glob(os.path.join(relpath, '*'))
     # for each sim folder, look for sub-directories
     for spath in spaths:
-        sim_sub_paths = glob.glob( os.path.join( spath, '*') )
+        sim_sub_paths = glob.glob(os.path.join(spath, '*'))
 
         # remove merge sub-directory if it exists
-        sim_sub_paths = [ii for ii in sim_sub_paths if ii.split('/')[-1] != 'merge']
+        sim_sub_paths = [
+            ii for ii in sim_sub_paths if ii.split('/')[-1] != 'merge']
         sim_sub_paths = sorted(sim_sub_paths, key=sort_sim_names)
 
         # merge these dirs
         if len(sim_sub_paths) != 1:
-            merge_single_sim( sim_sub_paths)
+            merge_single_sim(sim_sub_paths)
 
     # Alternate
     # sim_sub_paths = [

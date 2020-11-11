@@ -2,6 +2,8 @@
 */*.swp
 *.pptx
 *.ppt
+*.mp4
 .*
 tags
+*test_results*
 
