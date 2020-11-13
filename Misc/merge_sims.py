@@ -1,14 +1,59 @@
+#!/usr/bin/env python3
+
 import os
 import numpy as np
 import shutil
 from shutil import ignore_patterns
 from pathlib import Path
 import stat
-import glob
 import pdb
 
+'''
+Name: merge_sims.py
+Description: merge_sims performs a merge operation on a single set of simulations 
+Input: To see help type merge_sims.py -h
+'''
+
+def parse_args():
+
+    parser = argparse.ArgumentParser(prog='merge_sims.py')
+    opts = parser.parse_args()
+    return opts
+
+def get_sim_names(opts=None):
+    # Prompt user for sim path and list of sim names to merge
+
+    # Prompt user for path to parent folder containing sims
+    print('Get simulations to merge\n')
+    prompt1 = 'Specify absolute path to parent containing simulations to merge:\n'
+    relpath = Path(input(prompt1))  # get path from user
+    fpath = Path(relpath).resolve()
+    if not fpath.exists():
+        raise Exception('specified path does not exist')
+
+    print('\nSpecify simulation names to merge: (type stop when no more left to add)')
+    sname = 'none'
+    spaths  = []
+    snames = []
+    while len(snames) < 7:
+        sname = input('Next sim-name : ')  # get path from user
+        if sname == 'stop':
+            break
+        else:
+            spath = fpath / sname
+            if not spath.exists():
+                raise Exception('Specified path does not exist')
+            spath.resolve()
+            snames.append( sname)
+            spaths.append( spath)
+            print('\nCurrent sims to merge: {}'.format(snames))
+    
+    print('\nFinal sims to merge: {}'.format(snames))
+    print('*****************************************************************')
+    return spaths
 
 def merge_single_sim(sim_folders):
+    # Merge a single sim
 
     if len(sim_folders) == 1:
         return
@@ -29,8 +74,13 @@ def merge_single_sim(sim_folders):
     # Get path of first folder. This is where the merge will be created.
     head_tail = sim_folders[0].parent
 
-    # Begin by creating a new folder
-    merge_dir = head_tail / 'merge'
+    # Begin by creating the merge folder
+    prompt = 'Specify name of merge folder (default "merge") : '
+    mname = input(prompt)  # get path from user
+    if mname == '':
+        mname = 'merge'
+    merge_dir = head_tail / mname
+
     if merge_dir.exists():
         shutil.rmtree(merge_dir)
     merge_dir.mkdir()
@@ -191,6 +241,12 @@ def sort_sim_names(s):
 
 
 if __name__ == "__main__":
+
+    print('*****************************************************************')
+    print('*********************** merge_sims.py ***************************')
+    print('*****************************************************************')
+    # opts = parse_args()
+
     # # Get all sim folders
     # # Prompt user for relative path to folder containing sims
     # prompt = '\nSpecify relative path to run folder with simulation folders: '
@@ -214,14 +270,5 @@ if __name__ == "__main__":
         # if len(sim_sub_paths) != 1:
             # merge_single_sim( sim_sub_paths)
 
-    # Alternate
-    path_parent = Path("/Users/saadjansari/Documents/Projects/Results/AMSOS/Tactoids/n25600")
-    sim_sub_paths = [
-            path_parent / 'f10',
-            path_parent / 'f10_c', 
-            ]
-    # sim_sub_paths = [
-        # Path("/mnt/home/alamson/projects/DATA/AMSOS_Methods/20-10-14_iso_5.03um_nfil25600_nxl5.7pc"),
-        # Path("/mnt/home/alamson/projects/DATA/AMSOS_Methods/20-10-14_iso_5.03um_nfil25600_nxl5.7pc_cont"),
-    # ]
-    merge_single_sim(sim_sub_paths)
+    spaths = get_sim_names() 
+    merge_single_sim(spaths)
