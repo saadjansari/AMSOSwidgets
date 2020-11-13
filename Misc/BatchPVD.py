@@ -1,15 +1,21 @@
-import os
-import pdb
-import glob
-import subprocess
+#!/usr/bin/env python3
+from pathlib import Path
+from os import chdir
+from subprocess import call
 
-# path1 = '/Users/saadjansari/Documents/Projects/Results/AMSOS/Confinement/scan_d_pf_const_num/run'
-path1 = '/Users/saadjansari/Documents/Projects/Results/AMSOS/Confinement/bigsims'
-scripts = glob.glob( os.path.join(path1, '*/*/*/Result2PVD.py'))
+# This script launches the local 'Result2PVD.py' script for AMSOS sims. This can be used with a run path
 
-for spath in scripts:
+# Prompt the user for the path to the run directory
+prompt = '\nSpecify path to run folder with sims/seeds: '
+relpath = Path(input(prompt))  # get path from user
+fpath = Path(relpath).resolve()
+if not fpath.exists():
+    raise Exception('specified path does not exist')
+print('Run path: {}\n'.format(fpath))
+print('Creating PVD files for Paraview...')
 
-    pth = '/'.join( spath.split('/')[:-1])
-    print(pth)
-    os.chdir( pth)
-    subprocess.call(["python", "Result2PVD.py"])
+rpvd_paths = fpath.glob('**/Result2PVD.py')
+for spath in rpvd_scripts:
+    spath.resolve()
+    chdir( spath.parent)
+    call(["python", "Result2PVD.py"])
