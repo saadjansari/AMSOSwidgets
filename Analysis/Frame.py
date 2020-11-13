@@ -101,7 +101,10 @@ class Frame():
                         ends_cc, ends_cc[0,:], self.opts.boxsize)
             else:
                 ends_cc_unfolded = ends_cc
-            self.data['tactoid_aspect_ratio'] = calc_aspect_ratio( ends_cc_unfolded)
+            tac_aspect, tac_len, tac_width = calc_aspect_ratio( ends_cc_unfolded)
+            self.data['tactoid_aspect_ratio'] = tac_aspect 
+            self.data['tactoid_length'] = tac_len
+            self.data['tactoid_width'] = tac_width
 
         if self.opts.analyze_z_ordering:
             self.data['z_order'] = calc_z_ordering(
