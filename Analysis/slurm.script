@@ -1,0 +1,12 @@
+#SBATCH --job-name=aman
+#SBATCH --time=00:30:00
+#SBATCH -A ucb-summit-smr
+#SBATCH --partition=shas
+#SBATCH --qos=condo
+#SBATCH --output=out.log
+#SBATCH --error=out.err
+#SBATCH --nodes=1
+#SBATCH --exclusive
+
+python3 aman.py -T -O --parallel -P .
+

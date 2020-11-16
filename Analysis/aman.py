@@ -3,6 +3,9 @@
 from pathlib import Path
 import os
 import argparse
+from multiprocessing import Pool, cpu_count
+import pdb
+from itertools import repeat
 
 from sim import Sim
 
@@ -30,11 +33,11 @@ def parseArgs():
         default=False,
         help='use confinement options for analysis')
     parser.add_argument(
-        '-G',
-        '--graph',
-        action='store_true',
-        default=False,
-        help='make graphs for sims')
+        '-P',
+        '--path', 
+        type=str, 
+        default='.',
+        help='path for analysis')
     parser.add_argument(
         '-O',
         '--overwrite',
@@ -47,6 +50,17 @@ def parseArgs():
         dest='sim_names',
         default=[],
         help='Specific sims to run analysis on. Appends to the list')
+    parser.add_argument(
+        '--parallel',
+        action='store_true',
+        default=False,
+        help='attempt to parallelize the analysis of individual sims')
+    # parser.add_argument(
+        # '-G',
+        # '--graph',
+        # action='store_true',
+        # default=False,
+        # help='make graphs for sims')
     opts = parser.parse_args()
 
     # Specify analysis options
@@ -88,29 +102,45 @@ def parseArgs():
     print('\tZ-ordering: {}'.format(opts.analyze_z_ordering))
     return opts
 
+def analyzeSingleSim( spath, sname, opts):
+    sim = Sim(spath, sname, opts)
+    sim.analyze()
 
 def analyze(opts):
 
     # Prompt user for relative path to folder containing sims
-    prompt = '\nSpecify relative path to run folder with simulation folders: '
-    relpath = Path(input(prompt))  # get path from user
-    fpath = Path(relpath).resolve()
+    # prompt = '\nSpecify relative path to run folder with simulation folders: '
+    # relpath = Path(input(prompt))  # get path from user
+    fpath = Path(opts.path)  # get path from user
+    fpath.resolve()
+    fpath = fpath.absolute()
     if not fpath.exists():
         raise Exception('specified path does not exist')
     print('Run path: {}\n'.format(fpath))
 
     if opts.sim_names:
-        spaths = [ relpath / ii for ii in opts.sim_names]
+        spaths = [ fpath / ii for ii in opts.sim_names]
         snames = opts.sim_names
+        for spath in spaths:
+            if not spath.exists():
+                raise Exception('The following path does not exist:\n  {}'.format(spath))
+            spath.resolve()
     else:
         # get sim folders (folders with result dirs) recursively using ** notation
-        spaths = [res_path.parent for res_path in relpath.glob('**/result')]
+        spaths = [res_path.parent for res_path in fpath.glob('**/result')]
         snames = ['__'.join(path.name.split('/')) for path in spaths]
 
-    # For each sim, analyze it
-    for spath, sname in zip(spaths, snames):
-        sim = Sim(spath, sname, opts)
-        sim.analyze()
+    if opts.parallel:
+        print('...Executing in Parallel...')
+        ncpu = cpu_count()
+        print('  Number of cores = {}'.format(ncpu))
+        with Pool(processes=ncpu) as pool:
+            pool.starmap( analyzeSingleSim, zip(spaths,snames, repeat(opts)))
+
+    else:
+        # For each sim, analyze it
+        for spath, sname in zip(spaths, snames):
+            analyzeSingleSim(spath, sname, opts)
 
 
 if __name__ == "__main__":
