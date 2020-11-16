@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 #SBATCH --job-name=aman
 #SBATCH --time=00:30:00
 #SBATCH -A ucb-summit-smr
@@ -8,5 +10,5 @@
 #SBATCH --nodes=1
 #SBATCH --exclusive
 
-python3 aman.py -T -O --parallel -P .
+python3 aman -T -O --parallel -P .
 
