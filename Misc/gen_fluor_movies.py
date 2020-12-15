@@ -37,9 +37,11 @@ def parse_args():
             'bkglevel': np.float_(0.0),
             'noisestd': np.float_(0.0),
             'pixelsize': np.float_(.03067),
+            # percentage of filaments that are graphed
             'graph_frac': np.float_(.1),
-            'n_graph': 10,
+            'n_graph': 5,
             'fps': 10,
+            'time_step': .01,
         }
     else:
         param_path = Path(opts.input)
@@ -164,10 +166,14 @@ def create_fluor_frame(fil_dat_path, fil_idx_arr, run_params,
     return image_data
 
 
-def animate(i, ax, X, Y, frames, vmax):
+def animate(i, ax, X, Y, frames, vmax, opts):
     ax.clear()
-    pcm = ax.pcolormesh(X, Y, frames[i], cmap='gray', vmax=vmax)
-    ax.set_title("Frame {}".format(i))
+    pcm = ax.pcolormesh(X, Y, frames[i],
+                        shading='auto', cmap='gray', vmax=vmax)
+    # pcm = ax.pcolorfast(frames[i], cmap='gray', vmax=vmax)
+    ax.set_title("Time {:.2f} sec".format(float(i *
+                                                opts.params['time_step'] *
+                                                opts.params['n_graph'])))
     return [pcm]
 
 
@@ -195,7 +201,7 @@ def main(opts):
     X, Y, _ = make_image_bkg(sim_box, opts.params)
 
     frames = []
-    for i, fdp in enumerate(fil_dat_paths[::10]):
+    for i, fdp in enumerate(fil_dat_paths[::opts.params['n_graph']]):
         t0 = time()
         frames += [create_fluor_frame(fdp,
                                       fil_idx_arr,
@@ -206,9 +212,9 @@ def main(opts):
     ax.set_aspect('equal')
     ani = FuncAnimation(fig, animate, len(frames),
                         fargs=(
-        ax, X, Y, frames, opts.params['A'] / opts.params['graph_frac']),
+        ax, X, Y, frames, opts.params['A'] / opts.params['graph_frac'], opts),
         blit=True)
-    writer = FFMpegWriter(fps=10, bitrate=1800)
+    writer = FFMpegWriter(fps=opts.params['fps'], bitrate=1800)
     ani.save("fluor_vid.mp4", writer=writer)
 
 
